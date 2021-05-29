@@ -1487,7 +1487,7 @@ INFO    : volatility.debug    : Determining profile based on KDBG search...
 
 ```
 
-Kiểm tra các process chạy trên hệ thống, thấy được 2 process khả ghi là `msdt.exe ` và ` chrome.exe `.
+Kiểm tra các process chạy trên hệ thống, thấy được 2 process khả ghi là `msdt.exe ` và `chrome.exe`.
 
 * Msdt.exe: là các tệp khởi chạy dịch vụ Giao dịch phân tán của Microsoft.
 * chrome.exe: là một tệp thực thi chạy Trình duyệt web Google Chrome.
