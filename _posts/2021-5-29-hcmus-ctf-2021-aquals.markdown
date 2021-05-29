@@ -11,16 +11,19 @@ categories: ctf
 ### <u>*<center>nOnSlaS</center>*</u>
 
 
+| Challenge name                                               | 
+| ------------------------------------------------------------ | 
+| [WEB](#WEB) | 
+| [PWNABLE](#PWNABLE) | 
+| [REVERSE](#RE) | |
+| [CRYPTOGRAPHY](#CRYPTOGRAPHY) | 
+| [MISC](#MISC) |
+| [FORENSIC](#FORENSIC) |
+
+
 # WEB
 
 ------
-
-| Challenge name                                               | Points | Solvers |
-| ------------------------------------------------------------ | ------ | ------- |
-| [Nothingness](#nothingness) | 32     | 27      |
-| [EasyLogin](#easylogin) | 71     | 24      |
-| [SimpleCalculator](#simplecalculator) | 94     | 12      |
-| [GITchee-gitchee-goo](#gitchee-gitchee-goo) | 193    | 9       |
 
 ### Nothingness
 
