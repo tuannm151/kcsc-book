@@ -7,4 +7,4 @@ tags: [ctf, hcmus]
 categories: ctf
 ---
 
-## Test		
+## Comming soon in 22:00 pm | TODAY		
