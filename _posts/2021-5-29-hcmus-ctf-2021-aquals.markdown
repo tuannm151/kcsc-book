@@ -300,21 +300,22 @@ Chèn một chuỗi kí tự dài gây tràn bộ đệm.
 
 Lỗi xảy ra ở hàm Register() dùng gets (tràn bộ đệm). Dẫn tới có thế ghi đè biến balance để đọc flag.
 
- ![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/1.png)      
+![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/1.png)      
 
 Payload: cyclic(64) + p32(0x66a44)
 
- ![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/2.png)   
+![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/2.png)   
 
 ### BANK 3
 
- ![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/3.png)   
+![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/3.png)   
 
 Bài này giống tương tự với bài trên. Thay vì ghi đè biến balance thì sẽ phải ghi đè địa chỉ trở về đến hàm getFlag().
 
- ![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/4.png)   
+![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/4.png)   
 
 Payload: cyclic(0x4c + 4) + p32(0x8048506)
+
 ![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/5.png)   
 
 
@@ -324,6 +325,7 @@ Payload: cyclic(0x4c + 4) + p32(0x8048506)
 
 
 Tương tự lỗi như 2 bài trên. Nhưng bài này hàm đọc flag có kèm điều kiện:
+
 ![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/7.png)   
 
 
@@ -356,12 +358,14 @@ Bước 2 ghi đè địa chỉ đến up1, bên dưới là địa chỉ hàm �
 Với bài này thì cũng là tràn bộ đệm gets. Nhưng không có hàm đọc flag easy như những bài phía trên.
 
 Ngồi search hàm từ khóa sys trong bảng fuction thì tìm được hàm dl_sysinfo_int80() thực thi int 80.
+
 ![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/14.png)   
 
 
 Vậy làm cách nào đó cho các thanh ghi eax = 0xb, ebx trỏ đến /bin/sh, ecx, edx = 0 rồi trỏ đến đó là được.
 
 Đầu tiên ta sẽ ghi chuỗi /bin/sh vào bss. Bằng cách ghi đè địa chỉ trở về đến hàm gets với đầu vào là địa chỉ bss.
+
 ![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/15.png)   
 
 
@@ -372,6 +376,7 @@ Bước cuối cùng là sẽ dùng ROP để 0xb, 0, 0 lần lượt vào eax, 
 Còn đối với ebx. Ta sẽ lợi dụng mov ebx, [ebp – 4] để ghi địa chỉ bss vào ebx.
 
 Sau đó sẽ gọi đến dl_sysinfo_int80() là xong.
+
 ![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/16.png)   
 
 
@@ -386,10 +391,12 @@ Nhưng với %1036s thì ta không thể ghi đè được địa chỉ trở v�
 
 Nhưng ta có thể ghi đè được bytes cuối của ebp do cơ chết scanf và lợi dụng leave retn để control EIP về shellcode.
 
- ![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/18.png)   
- ![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/19.png)   
+![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/18.png)  
+
+![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/19.png)   
 
 Payload:
+
 ![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/20.png)   
 
 
@@ -399,6 +406,7 @@ Payload:
  ![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/21.png)   
 
 Ghi dè biến v8 => 0Xcabbfeff
+
 ![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/22.png)   
 
 
@@ -416,6 +424,7 @@ Nhìn qua thì đây là 1 file python được compile thành ELF
 Ban đầu dùng pyinstxtractor thấy có lỗi không hỗ trợ. Google 1 lúc thì thấy có hướng dẫn dùng pyi-archive_viewer 
 
 https://reverseengineering.stackexchange.com/questions/19900/decompile-python-for-elf-binaries
+
 ![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/24.png)   
 
 
@@ -430,6 +439,7 @@ Ta extract file authentication ra và ném vào CFF coi qua magic thì thấy c�
 Copy 1 đoạn ở hàm encrypt1 trong source để google thì phát hiện nó được mã hóa bằng thuật toán XTEA.
 
 Đối với các đuôi file không nằm trong list thì sẽ được mã hóa đơn giản bằng hàm xor.
+
 ![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/26.png)   
 
 
@@ -438,6 +448,7 @@ Copy 1 đoạn ở hàm encrypt1 trong source để google thì phát hiện nó
 Bây giờ sẽ copy đoạn code ở trên ném vào source đã cho chỉnh sửa 1 chút để bruteforce key thế là xong (key 4 bytes).
 
 Những đoạn sửa
+
 ![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/27.png)   
 
 
@@ -450,27 +461,18 @@ Kiểm tra magic file.
  ![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/29.png)   
 
 Xóa bớt file đi để lai file flag.png thôi.
+
 ![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/30.png)   
 
 
-
-
-
-
-
-
-
-
 Thay vì gọi encrypt1 thì ta sẽ đổi thành decipher.
+
 ![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/31.png)   
 
 
-
-
 Hàm decrypt.
+
 ![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/32.png)   
-
-
 
 
 Sau khi brute thành công có ngay KEY = [0,0,0,0]
@@ -478,12 +480,10 @@ Sau khi brute thành công có ngay KEY = [0,0,0,0]
   ![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/33.png)   
 
  
-
- 
-
 ### M_vm
 
 Đề bài là một vmcode như bao bài vmcode khác.
+
 ![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/34.png)   
 
 
@@ -491,7 +491,8 @@ Nói chung đây là một bài vm nhỏ và khá đơn giản.
 
 Đây là nơi in ra thông báo và nhận input từ người dùng.
 
- ![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/35.png)   
+
+![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/35.png)   
 
  
 
@@ -501,11 +502,11 @@ Mỗi lần lấy 4 ký tự trong chuỗi ta nhập vào và kiểm tra thông 
 
 Case 0x34535888 là nơi sẽ lấy 4 gán vào v19: ban đầu là 0xDEADBEEF và quay lên case 0x83660101 xor với 4 bytes ký tự của ta. 
 
- ![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/36.png)   
+![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/36.png)   
 
-Sau đó kết quả xor được sẽ mang đi sum với key khác mà mặc định ở đây theo như phân tích thì luôn là 0x13371337
+Sau đó kết quả xor được sẽ mang đi sum với key khác mà mặc định ở đây theo như phân tích thì luôn là 0x13371337.
 
- ![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/37.png)   
+![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/37.png)   
 
 
 
@@ -513,17 +514,16 @@ Sau đó kết quả xor được sẽ mang đi sum với key khác mà mặc đ
 
 0x11112222 là lấy kq từ 2 lần tính toán trên và gán vào vm.
 
- ![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/38.png)   
+![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/38.png)   
 
 Tại đây lấy ra kết quả cần so sánh.
 
- ![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/39.png)   
+![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/39.png)   
 
  
-
 Kiểm tra hai kết quả khớp hay không và gán giá trị True False vào (vm + 24)
 
- ![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/40.png)   
+![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/40.png)   
 
 Thực hiện kiểm tra.
 
@@ -539,7 +539,7 @@ Gía trị cần so sánh đầu tiên nằm ở offset 80 của vm và những 
 
 Vì bài cũng đơn giản nên không cần dump rồi code lại lắm. Ta chỉ cần dump các giá trị cần so sánh và khởi tạo 2 key là key1 = (vm + 80) và key2 = 0x13371337 giải rồi giải ngược lại là xong.
 
- ![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/42.png)   
+![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/42.png)   
 
 
 
@@ -547,63 +547,53 @@ Vì bài cũng đơn giản nên không cần dump rồi code lại lắm. Ta ch
 
 Bài này thì liên quan đến việc giao tiếp trao đổi dữ liệu thông qua socket mô hình client server. Bài này 2 cách giải mình sẽ trình bày cả 2 cách.
 
- ![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/43.png)   
+![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/43.png)   
 
 Thực hiện drop binary từ resource.
 
- ![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/44.png)   
+![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/44.png)   
 
- 
-
- 
-
- 
-
- 
 
 Mở process server
 
- ![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/45.png)   
+![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/45.png)   
 
 Dùng CFF dump luôn cho lẹ.
 
- 
-
- ![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/46.png)   
+![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/46.png)   
 
  
-
- 
-
 Phân tích luôn file vừa dump
+
 ![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/47.png)   
- ![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/48.png)   
+
+![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/48.png)   
 
  
-
 Với việc không tìm thấy đoạn string nào là HCMUS-CTF{} nên khả năng cao là format nằm trong cipher lúc giải ra luôn giống như mấy bài trước. 
 
 Vậy lại buteforce vì thấy % len, đoán có thể key ngắn nên có thể tìm được key ở những đoạn lặp lại lúc brute bằng format flag. Thế thì nếu thành công thì cả đống code trên coi như không cần tốn sức đụng đến. Bên dưới là script.
 
  
-
- 
-
 Đây dồi lụm. Hóa ra là ngắn thật key = [104,101,108,108,111]
+
 ![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/49.png)   
 
 
 Gòi viết 1 đoạn decrypt hết lụm flag.
+
 ![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/50.png)   
 
 
 Hoặc có thể Reverse đoạn thuật toán phía trên chính là SHA256. Đem 32 bytes đó đi google search thì sẽ có key.
 
 Cụ thể hơn nhá ta sẽ leak đống hex ở trên ra và gộp lại thành chuỗi hex sha256 rồi đi google.
+
 ![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/51.png)   
 
 
 Đây dùng sublime cho lẹ.
+
 ![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/52.png)   
 
 
@@ -618,12 +608,13 @@ Dòi đi google ta nhận được key là ‘hello’
 Cụ thể sẽ giấu text từ 1 file vào vào hình.
 
 Mấu chốt thì nằm ở 2 hàm
+
 ![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/54.png)   
 
 
 Và
 
- ![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/55.png)   
+![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/55.png)   
 
 Quy luật của thuật toán này như sau nó sẽ bóc tách từng bit của byte cần giấu và giấu vào từng byte trong ảnh.
 
@@ -638,11 +629,10 @@ Nếu ll = 1 thì giấu vào bit thứ 2 từ phải qua, = 0 thì bit đầu �
 Nhiệm vụ là cần bóc tách các bit đã giấu ra và gộp thành các bytes như ban đầu.
 
 Bước 1: Chúng ta sẽ trích xuất vùng bytes nơi được giấu tin. Ta debug bằng dnspy và dump ra.
+
 ![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/56.png)   
 
-
 Sau khi có được dữ liệu cần xử lý thì tiến hành code nhặt các bit đã giấu.
-
 
 ![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/57.png)   
 
@@ -651,16 +641,19 @@ Sau khi có được dữ liệu cần xử lý thì tiến hành code nhặt c�
 
 Sau đó mở file ta sẽ được hình có chứa flag:
 
- ![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/58.png)   
+![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/58.png)   
 
 ### Android_rev
 
  Ở bài này ta có flag được tách ra làm 5 phần thông qua ‘–‘. Ký tự đó thì được giải thông qua 10 lần base64.
- ![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/59.png) 
+
+![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/59.png) 
+
 Vậy chỉ cần đi search database md5 trên google thử.
 
-  ![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/62.png)  
-  ![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/63.png)  
+![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/62.png)  
+
+![1](https://kcsc-club.github.io/images/hcmus-ctf-2021/rev/63.png)  
 
  
 
