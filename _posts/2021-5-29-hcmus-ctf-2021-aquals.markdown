@@ -1221,9 +1221,8 @@ cat flag.txt
 ```
 
 > HCMUS-CTF{privilege_escalation_is_fun!!!}
----
 
-
+----
 
 # <a name="FORENSIC"></a>FORENSIC
 
@@ -1281,7 +1280,7 @@ for l in ls:
 fw.write("".join(arr))
 ```
 
->HCMUS-CTF{You_Know_How_To_Manipulate_Images_1324587}
+> HCMUS-CTF{You_Know_How_To_Manipulate_Images_1324587}
 
 ### Metadata
 
