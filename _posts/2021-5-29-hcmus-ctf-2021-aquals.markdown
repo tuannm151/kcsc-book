@@ -21,7 +21,7 @@ categories: ctf
 | [FORENSIC](###FORENSIC) |
 
 
-# WEB
+# <a name="WEB"></a>WEB
 
 ------
 
@@ -286,7 +286,7 @@ Và ta có flag XD
 
 -----
 
-# PWNABLE
+# <a name="PWNABLE"></a>PWNABLE
 
 ### BANK 1
 
@@ -404,7 +404,7 @@ Ghi dè biến v8 => 0Xcabbfeff
 
 ----
 
-# RE
+# <a name="RE"></a>RE
 
 
 ### Faded
@@ -668,7 +668,7 @@ Vậy chỉ cần đi search database md5 trên google thử.
 
 
 
-# CRYPTOGRAPHY
+# <a name="CRYPTOGRAPHY"></a>CRYPTOGRAPHY
 
 ### SanityCheck
 
@@ -1200,7 +1200,7 @@ while True:
 
 
 
-# MISC
+# <a name="MISC"></a>MISC
 
 ### Dodge
 
@@ -1232,7 +1232,7 @@ cat flag.txt
 
 
 
-# FORENSIC
+# <a name="FORENSIC"></a>FORENSIC
 
 ### NiceEars
 
