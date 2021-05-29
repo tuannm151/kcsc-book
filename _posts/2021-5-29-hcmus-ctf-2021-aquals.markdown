@@ -13,12 +13,12 @@ categories: ctf
 
 | Challenge type                                             | 
 | ------------------------------------------------------------ | 
-| [WEB](###WEB) | 
-| [PWNABLE](###PWNABLE) | 
-| [REVERSE](###RE) | |
-| [CRYPTOGRAPHY](###CRYPTOGRAPHY) | 
-| [MISC](###MISC) |
-| [FORENSIC](###FORENSIC) |
+| [WEB](#WEB) | 
+| [PWNABLE](#PWNABLE) | 
+| [REVERSE](#RE) | |
+| [CRYPTOGRAPHY](#CRYPTOGRAPHY) | 
+| [MISC](#MISC) |
+| [FORENSIC](#FORENSIC) |
 
 
 # <a name="WEB"></a>WEB
