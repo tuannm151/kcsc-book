@@ -11,7 +11,7 @@ categories: ctf
 ### <u>*<center>nOnSlaS</center>*</u>
 
 
-| Challenge name                                               | 
+| Challenge type                                             | 
 | ------------------------------------------------------------ | 
 | [WEB](###WEB) | 
 | [PWNABLE](###PWNABLE) | 
