@@ -55,4 +55,10 @@
   &:active {
     transform: translateY(2px);
   }
+
+  &--third{
+    color: $white-color;
+    background-color: $primary-color;
+    background: linear-gradient(135deg, #f083cf 0%, #46eafb 100%);
+  }
 }
