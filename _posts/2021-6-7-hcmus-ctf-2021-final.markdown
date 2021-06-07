@@ -2,7 +2,7 @@
 layout: post
 title: WRITE-UP HCMUS-CTF-2021-FINAL
 image: hcmus-ctf-2021/background.jpg
-date: 2021-05-29 22:00:00 +0700
+date: 2021-06-07 21:00:00 +0700
 tags: [ctf, hcmus]
 categories: ctf
 ---
