@@ -9,10 +9,6 @@ categories: ctf
 
 
 
-# <u>HCMUS-CTF-2021-FINAL </u>
-
-
-
 
 | Challenge type                |
 | ----------------------------- |
