@@ -628,7 +628,7 @@ Tiếc là, team mình đã không kịp solve được challenge này nên khá
 
 ---
 
-# <a name="WEBMIX"></a>WEB MIX(From Lotus-Assassins)
+# <a name="WEBMIX"></a>WEB MIX
 
 ## Web x Cryptography
 
