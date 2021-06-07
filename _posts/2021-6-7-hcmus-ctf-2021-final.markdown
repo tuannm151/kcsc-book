@@ -663,12 +663,22 @@ categories: ctf
   ## Web x Binary
   
   - Đây là 1 bài web khá thú vị, đội của mình khá may mắn khi là đội duy nhất giải được câu này
+  
   - Đầu tiên sẽ nhận 2 params `username` và `password` sau đó dùng hàm `escapeshellarg` để filter nên không thể khai thác bằng `os command injection` được
+  
   - Sau khi lấy file binary về, ném vào IDA thì luồng của chương trình như sau
-    ![image](https://user-images.githubusercontent.com/41907864/120990335-a2862480-c7aa-11eb-8252-30b036c56ea8.png)
+  
+    
+
+  ![image](https://user-images.githubusercontent.com/41907864/120990335-a2862480-c7aa-11eb-8252-30b036c56ea8.png)
+
+  
+  
   - Chương trình nhận vào 2 parameter lần lượt là `username` và `password`, sau đó gọi hàm `check_login`, hàm này cũng truyền reference biến `session_id` vào
   - Hàm `check_login` có luồng thực thi như sau
-    ![image](https://user-images.githubusercontent.com/41907864/120990706-04468e80-c7ab-11eb-9dc2-e080448b7a52.png)
+
+ ![image](https://user-images.githubusercontent.com/41907864/120990706-04468e80-c7ab-11eb-9dc2-e080448b7a52.png)
+
   - Đầu tiên nó sẽ  gọi hàm `hex_encode` username và lưu vào biến `hex_result`, sau đó đọc từng dòng trong file `./data/user-database.txt` sau đó tách username và password theo format `%s %s`, tiếp theo sẽ dùng hàm `strncmp` để so sánh, nếu username và password trùng khớp thì sẽ copy `hex_result` vào `session_id`
   - Vậy tức là file auth có nhiệm vụ như sau: Kiểm tra username và password, nếu trùng khớp với 1 tài khoản trong file `./data/user-database.txt` thì sẽ trả về hex encode của username
   - Sau khi đọc file `index.php?debug=1` thì mình phát hiện ra rằng, có thể trigger được sqli nếu như có thể control được `session_id` được trả về từ binary `auth`
@@ -678,10 +688,10 @@ categories: ctf
   - Sau khi lấy được toàn bộ tables thì mình thấy có 1 table tên `flag_abcxyz`
   - Cuối cùng là payload để lấy flag: `username=admin&password=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\' union select 1,* from
     flag_abcxyz-- -`
-  
-  
-  
-  ----
+
+ 
+
+----
 
 
   # <a name="PWN"></a>PWNABLE
