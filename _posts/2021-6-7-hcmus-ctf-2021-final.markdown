@@ -16,16 +16,16 @@ categories: ctf
 | [WEB MIX](#WEBMIX)            |
 | [PWNABLE](#PWN)               |
 | [CRYPTOGRAPHY](#CRYPTOGRAPHY) |
-| [REVERSE](#CRYPTOGRAPHY)      |
+| [REVERSE](#REVERSE)      |
 
 ----
 
 # <a name="WEB"></a>WEB
 
 
-- ## GenshinWiki  
+ ## GenshinWiki  
 
-  ```  
+	```
   Description: Flag stored at ./flag.txt  
   Attachment: Dockerfile  
   ```
