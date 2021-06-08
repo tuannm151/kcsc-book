@@ -740,7 +740,6 @@ Payload:
 ## Polynomial AES (58 pts)
 
 `encrypt.py`
-
 ```python
 from Crypto.Util.number import getPrime, getRandomRange, getRandomInteger
 from Crypto.Util.Padding import pad
@@ -789,26 +788,24 @@ ct = cipher.encrypt(pad(flag, AES.block_size))
 
 print(f"Encrypted flag: {ct.hex()}")
 ```
-
 `output.txt`
-
 ```
 p = 177623787080918790693312135936556122024020095001443303172107276987982440197490523418145835127889071265905054737784623738629013338784360558617366098465518180680782530663638215602960132688937540305263995580366073873308704407001927606741585489839642710147345583432505462036986076120792139184590814347216415564101
 q = [801237753591354715102942191156, 626618719198500674209203323781, 990607682230559368102514378597, 300626649773649360709969851789, 874661725788013406358456728725, 611124797526692571169418404283, 696940952735206910076260768209, 202318491739756355785884585154, 217597478025466348191206328033, 238860189889236925504208320473, 257324672120956057034462883536, 160322512393915295700562029637, 607851219645061751393650249507, 843763343969620761723084660993, 664187143329183292841846729739, 1006116355393829943519743575276, 1032255895907602121421225800124, 760726117259231496345295071803, 374029363383881393553491416304, 510251190591403967192508766973, 418897119833960203375767935538, 454322945572252709096080212504, 442294223579983673964906923798, 974394018465930277236048171917, 615939424032648824469586728134]
 Encrypted flag: 413016e1c544c23c3fddb759388ec267cd47980a57de5e3c5c6e6b5628eea5d5
 ```
 
-Cho một đa thức $f$ bậc $d$ thuộc $\mathbb{F}_p[x]$ với các hệ số như trong list `q`, khóa `key` dùng để mã hóa flag được tính bằng $s=f(1)+f(2)+f(3)+...+f(p-1)\thickspace (mod\thickspace p)$, `key = sha256(str(s).encode())`.
+Cho một đa thức *f* bậc *d* thuộc F<sub>p</sub>[x] với các hệ số như trong list `q`, khóa `key` dùng để mã hóa flag được tính bằng `s = f(1) + f(2) + f(3) + ... + f(p-1) (mod p)`, `key = sha256(str(s).encode())`.
 
 ```
 p = 177623787080918790693312135936556122024020095001443303172107276987982440197490523418145835127889071265905054737784623738629013338784360558617366098465518180680782530663638215602960132688937540305263995580366073873308704407001927606741585489839642710147345583432505462036986076120792139184590814347216415564101
 ```
 
-`p` có độ dài 1024 bit, loop từ 1 đến p-1 thì không biết đến khi nào mới xong...  
- Có $f(x)=q_{d}x^{d}+q_{d-1}x^{d-1}+q_{d-2}x^{d-2}+...+q_{1}x+q_{0} \thickspace (mod\thickspace p)$.  
- $s=f(1)+f(2)+f(3)+...+f(p-1) \thickspace (mod\thickspace p)$.  
- $s=\sum_{i=0}^{d}q_{i}.\left ( \sum_{k=1}^{p-1}k^{i} \right ) (mod\thickspace p)$.  
- Đổi lại thì phải tính $\sum_{k=1}^{p-1}k^{i}, i\in[0,d]$ - [Faulhaber's formula](https://en.wikipedia.org/wiki/Faulhaber%27s_formula).
+`p` có độ dài 1024 bit, loop từ 1 đến p-1 thì không biết đến khi nào mới xong...             
+Có ![equation](https://latex.codecogs.com/svg.image?f(x)=q_{d}x^{d}&plus;q_{d-1}x^{d-1}&plus;q_{d-2}x^{d-2}&plus;...&plus;q_{1}x&plus;q_{0}&space;\thickspace&space;(mod\thickspace&space;p)).             
+![equation](https://latex.codecogs.com/svg.image?s=f(1)&plus;f(2)&plus;f(3)&plus;...&plus;f(p-1)&space;\thickspace&space;(mod\thickspace&space;p)).                
+![equation](https://latex.codecogs.com/svg.image?s=\sum_{i=0}^{d}q_{i}.\left&space;(&space;\sum_{k=1}^{p-1}k^{i}&space;\right&space;)&space;(mod\thickspace&space;p)).            
+Đổi lại thì phải tính ![equation](https://latex.codecogs.com/svg.image?\sum_{k=1}^{p-1}k^{i},&space;i\in[0,d]) - [Faulhaber's formula](https://en.wikipedia.org/wiki/Faulhaber%27s_formula).
 
 ```python
 from Crypto.Cipher import AES
@@ -832,12 +829,11 @@ print(flag.decode())
 # HCMUS-CTF{learn-algebra}
 ```
 
----
+***
 
 ## DragonBall (95 pts)
 
-Bài `DragonBall` nói về [ElGamal signature scheme](https://en.wikipedia.org/wiki/ElGamal_signature_scheme). Mình chưa chụp lại lúc làm bài, mà sơ qua thì server có 3 lựa chọn, `generate`, `verify` và `debug`.
-
+Bài `DragonBall` nói về [ElGamal signature scheme](https://en.wikipedia.org/wiki/ElGamal_signature_scheme). Mình chưa chụp lại lúc làm bài, mà sơ qua thì server có 3 lựa chọn, `generate`, `verify` và `debug`.        
 - `generate` để nhập username, sau đó server gen một chuỗi `USERNAME=username&LEVEL=Saiyan`, ký bằng Elgamal-SHA1, trả về một token có chứa `r` và `s`.
 - `verify` để nhập token và xác thực user, nếu là `SuperSaiyan` thì trả về flag.
 - Và `debug` cho biết tham số `g` và `p` được dùng.
@@ -882,17 +878,15 @@ print(base64.b64encode(S))
 ```
 
 Lúc `verify` nhập token `SuperSaiyan` là được flag.
-
 ```
 VVNFUk5BTUU9MTIzJkxFVkVMPVN1cGVyU2FpeWFuJnI9TcO+a/HnAvpZ2UShuBOGKFpCLs6YIrRahGa79BTPMd+QWYHRAKFEEMZqVHDc6S7fzYnREkGr939fePpp+AlQ9rYuZ7BFHIyP3BWHDC2S6EB0p+/m2nbu3QP3wlKzFawn/UhcVJWFVydzVmYXmD4MKuQ1/ehF+TQPr0lxMQkkPGUmcz00i9EUt9d/ifwYU8pc8sxN/4O/O3kJD8+gBPYHAqSo5dKoMw7gI2S7GjkmJYg2MohUKYFK+Y+aV//wUdaBC5yVymcTGs3AM5mJqYOGXR+/9N3frdCGKwLNcaagdoepYUFKMxYfrD4u+BU67uTDuQoc+ol0bGNmtY6wfB/jNvZVEA==
 ```
 
----
+***
 
 ## RSA PTA (100pts)
 
 `chal.py`
-
 ```python
 from Crypto.Util.number import isPrime, getPrime
 import random
@@ -937,7 +931,7 @@ Challenge tạo hai số nguyên tố `p`, `q`, mã hóa một số ngẫu nhiê
 
 Như vậy mình cần tìm hai số nguyên tố sao cho việc tính logarit được dễ dàng một chút.
 
-Sau khi tìm được $dp$, $dq$ sao cho $m \equiv c^{dp} (mod \thinspace p)$ và $m \equiv c^{dq} (mod \thinspace q)$, tìm $d$ bằng cách lấy $d \equiv dp (mod \thinspace p-1)$ và $d \equiv dq (mod \thinspace q-1)$.
+Sau khi tìm được *dp*, *dq* sao cho m ≡ c^dp (mod p) và m ≡ c^dq (mod q), tìm d bằng cách tính d ≡ dp (mod p-1) và d ≡ dq (mod q-1).
 
 ```python
 from sage.all import *
@@ -964,7 +958,7 @@ while True:
     try:
         d = discrete_log(Mod(m,p),Mod(c,p))
         assert pow(Mod(c,p),d,p) == Mod(m,p) and p.nbits() > 511 and p.nbits() < 1024
-
+        
         if len(primes) != 0:
             assert (ds[0] - d) % gcd(primes[0]-1,p-1) == 0
         primes.append(p)
@@ -989,6 +983,7 @@ r.sendline(str(d))
 
 print(r.recv())
 ```
+
 
 ---
 
