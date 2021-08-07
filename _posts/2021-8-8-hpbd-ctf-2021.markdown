@@ -15,10 +15,7 @@ categories: ctf
 
 
 
-| WEB	|CRYPTO                                 |                 MISC             |
-|-------|--------------------------------------|--------------------------------------|
-| 	|				       |				      |
-
+![image](https://user-images.githubusercontent.com/85006768/128601243-de62d4c9-2058-4a52-a618-b932e14ca9e6.png)
 
 ---	
 
