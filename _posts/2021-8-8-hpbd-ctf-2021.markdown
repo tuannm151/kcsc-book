@@ -22,7 +22,23 @@ categories: ctf
 ###### <i><u>🔫🔫🔫Thử thách: <u><i>
 
 
-> COMMING SOON !
+* WEB:
+Có một hacker vừa gửi mail cho công ty chúng tôi và nói rằng trang web của chúng tôi có một lỗ hổng cực kỳ nghiêm trọng. Hỡi các người anh em thiện lành có thể giúp chúng tôi tìm ra lỗ hổng đó và gửi report cho công ty chúng tôi để bên kỹ thuật sửa chữa, tất nhiên bạn cũng sẽ có thưởng!! XD
+
+> Tệp đính kèm:https://drive.google.com/file/d/1-y7YxrtG59YVAglrJyrsA3s24bhSyqkG/view?usp=sharing
+> Địa chỉ thử thách: http://34.87.175.173:10666/
+
+* MISC:
+
+https://www.youtube.com/watch?v=Wu8NeFXaoOc . Định dạng cờ: UPPERCASE(FLAG)
+
+> nc 34.87.175.173 1337
+
+* CRYPTO:
+
+"Không cần mô tả gì đâu anh"
+
+> Tệp đính kèm: https://drive.google.com/drive/folders/1TT8nhT4weVUF4dyIJdmEiLVMVlg-GUg3?usp=sharing
 
 ---
 
