@@ -33,9 +33,7 @@ categories: ctf
 Người **đầu tiên** tìm ra được cờ ở **mỗi thử thách** sẽ nhận được một phần quà từ KCSC gồm:
 
 
-| WEB	|CRYPTO                                 |                 MISC             |
-|-------|--------------------------------------|--------------------------------------|
-| 50K	|	50K			       |		100K		      |
+![image](https://user-images.githubusercontent.com/85006768/128601125-abcadc1e-7ef6-47cb-90dc-1294d0dbe528.png)
 
 `+` Móc khóa + Sticker **(dành riêng cho các bạn sinh viên KMA)**  
 
