@@ -506,11 +506,11 @@ Thắc  mắc  xin  liên  hệ  DinDonDon  !
                         ------------oOo------------
 ```
 
-Khoảng cách từ trong đoạn thư ẩn mã [morse](https://vi.wikipedia.org/wiki/M%C3%A3_Morse). Với 
+Khoảng cách giữa các từ trong thư ẩn mã [morse](https://vi.wikipedia.org/wiki/M%C3%A3_Morse). Với 
 
 * `[space] * 3 = - (hyphen) `
 * `[space] * 2 = . (dot)`
-* `[space] * 1= (space)`
+* `[space] * 1 = (space)`
 
 Sau khi extract được đoạn mã, sử dụng [morse decoder](https://morsedecoder.com/) giải mã và nhận phần đầu của cờ.
 
