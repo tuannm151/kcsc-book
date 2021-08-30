@@ -893,12 +893,7 @@ Fault attack on RSA-CRT, bài yêu cầu gửi m (1 < m < n), trả về giá tr
 
 Bảng dưới tóm tắt S trả về tương ứng với (Sp, Sq), cột thứ hai là giá trị `S mod p`, cột thứ ba là giá trị `S mod q`, và `Ŝ` là kí hiệu có lỗi xảy ra.
 
-| S             | mod p | mod q |
-| ------------- | ----- | ----- |
-| S1 = (Sp, Sq) | m^dp  | m^dq  |
-| S2 = (Sp, Ŝq) | m^dp  | -     |
-| S3 = (Ŝp, Sq) | -     | m^dq  |
-| S4 = (Ŝp, Ŝq) | -     | -     |
+![image](https://user-images.githubusercontent.com/85006768/131309733-1397a1d5-49d3-4ab1-a5be-0c76bed430d6.png)
 
 Giả sử gửi 32 `m` giống nhau, trong các kết quả trả về có 32 giá trị S, `(Sp, Sq)` có thể nhận biết được vì S1 cố định, xuất hiện nhiều lần.
 
