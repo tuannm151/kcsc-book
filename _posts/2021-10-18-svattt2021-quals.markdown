@@ -445,7 +445,7 @@ Tiếp tục debug 2 đoạn powershell này bằng công cụ `Powershell Tools
 
 ![image](https://user-images.githubusercontent.com/41907864/137722084-2d10bd98-2819-4051-bd91-7a33d1be560b.png)
 
-Để ý kĩ thì đoạn powershell nàyn sẽ kiểm tra điều kiện và switch case để quyết định lấy dữ liệu từ registry nào để `Base64 decode` và cuối cùng là append vào file `flag.svattt`.
+Để ý kĩ thì đoạn powershell này sẽ kiểm tra điều kiện và switch case để quyết định lấy dữ liệu từ registry nào để `Base64 decode` và cuối cùng là append vào file `flag.svattt`.
 ```powershell
 if($11 -eq "a"){
     $111 = (Get-ItemProperty -path "Registry::HKEY_CLASSES_ROOT\uytrsavnsal" -name "jRSgo")."jRSgo";
