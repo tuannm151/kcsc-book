@@ -359,9 +359,9 @@ Hàm sub_1B7E sử dụng thuật toán RC4 để mã hóa chuỗi nhập vào v
   
 ![10](https://user-images.githubusercontent.com/85006768/137728063-80f136a7-c088-4496-97d2-0e51833c25cd.png)  
   
-Sau khi Xor ta có được key như sau:  
-
-![11](https://user-images.githubusercontent.com/85006768/137737133-55f2e07d-86f1-4715-9a96-6354905c8848.png)  
+Sau khi Xor ta có được key như sau:   
+  
+![11](https://user-images.githubusercontent.com/85006768/137739111-550308fd-004d-413a-851a-232bb736d476.png)
 
 Decrypt:
 
