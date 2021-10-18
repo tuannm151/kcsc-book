@@ -2,7 +2,7 @@
 layout: post
 title: WRITE-UP SVATTT-CTF-2021-QUALS
 image: svattt-2021-quals/background.png
-date: 2021-06-07 21:00:00 +0700
+date: 2021-10-18 20:00:00 +0700
 tags: [ctf, svattt, 2021, quals]
 categories: ctf
 ---
