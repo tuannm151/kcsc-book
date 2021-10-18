@@ -104,7 +104,7 @@ Login bằng certificate thành công, vào lấy flag và submit thôi.
 
 > Flag: `ASCIS{c3rt_val1dat1on_s1mpl3}`  
 
-# [Misc]()
+# [Misc](#MISC)
   
 ## PNG
 
@@ -279,7 +279,7 @@ Khuyến mãi: https://www.sans.org/blog/parsing-sysmon-events-for-ir-indicators
 
 ![image](https://user-images.githubusercontent.com/32236617/137701000-583f6f8b-b392-46cd-a061-8ccc030fb148.png)   
   
-# [RE]()  
+# [RE](#REVERSE)  
 
 ## FSM
 
@@ -515,7 +515,7 @@ Sau khi giải ra bài này, mình đã căng mắt ra để submit flag nhưng 
 
 > Flag: ASCIS{H1!_1_4m_p0w3r_Gh057}
 
-# [Web]()   
+# [Web](#WEB)   
 
 ## script kiddie - 100pts  
   
