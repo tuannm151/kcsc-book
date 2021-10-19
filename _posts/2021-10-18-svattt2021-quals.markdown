@@ -569,5 +569,5 @@ Tới đây thì thử đọc file flag:
 
 ## isolate - 475 pts  
   
-f
+fixingg...
 
