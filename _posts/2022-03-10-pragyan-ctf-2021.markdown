@@ -1659,7 +1659,7 @@ print(YourAnswer)
 
 `Flag: p_ctf{INfjnity5_b3g1n5_w1th_4n_1nc3pt10n}`
 
-> ### Excess Cookie V1 + Excess Cookie V1
+> ### Excess Cookie V1 + Excess Cookie V2
 
 Challenge mở đầu bằng một trang login
 ![image](https://user-images.githubusercontent.com/44127534/156954961-b70420b6-1bc1-475e-b7fb-19ee62294aab.png)
