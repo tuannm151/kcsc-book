@@ -1776,7 +1776,8 @@ Challenge cho source code:
     }
 ```
 
-Như ta thấy thì ở đây ta phải thỏa mãn 7 cái if để lấy được 7 phần của flag
+Như ta thấy thì ở đây ta phải thỏa mãn 7 cái if để lấy được 7 phần của flag  
+
 > FLAG1
 ```php
     if(isset($_GET["param1"])) {
@@ -1785,8 +1786,7 @@ Như ta thấy thì ở đây ta phải thỏa mãn 7 cái if để lấy đư�
         }
     }
 ```
-Bypass hàm strcmp() bằng cách dùng array: 
-```?param1[]=xxxx```
+Bypass hàm strcmp() bằng cách dùng array: `?param1[]=xxxx`
 
 > FLAG2
 ```php
@@ -1798,8 +1798,7 @@ Bypass hàm strcmp() bằng cách dùng array:
         }
     }
 ```
-Ở đây có 2 tham số GET là param2 và param3. Nó sẽ check nếu giá trị của chúng khác nhau mà sha1 của chúng bằng nhau thì sẽ trả về FLAG. Mà nó dùng strict comparision cho nên ta không thể dùng magic hash mà chỉ có thể bypass bằng cách dùng array: 
-```param2[]=1&param3[]=2```
+Ở đây có 2 tham số GET là param2 và param3. Nó sẽ check nếu giá trị của chúng khác nhau mà sha1 của chúng bằng nhau thì sẽ trả về FLAG. Mà nó dùng strict comparision cho nên ta không thể dùng magic hash mà chỉ có thể bypass bằng cách dùng array: `param2[]=1&param3[]=2`
 
 > FLAG3
 ```php
@@ -1811,8 +1810,7 @@ Bypass hàm strcmp() bằng cách dùng array:
         }
     }
 ```
-Tham số GET là param4. Và nó phải có giá trị bằng 1.2e3(Loose Comparision) và khác 1.2e3(Strict Comparision), do đó ta có thể bypass bằng cách thêm 000 vào trước:
-```param4=0001.2e3```
+Tham số GET là param4. Và nó phải có giá trị bằng 1.2e3(Loose Comparision) và khác 1.2e3(Strict Comparision), do đó ta có thể bypass bằng cách thêm 000 vào trước: `param4=0001.2e3`
 
 > FLAG4
 ```php
@@ -1823,8 +1821,7 @@ Tham số GET là param4. Và nó phải có giá trị bằng 1.2e3(Loose Compa
         }
     }
 ```
-Chỗ này không biết giải thích code sao vì tới 4 cái điều kiện. Nói chung thì sẽ bypass bằng cách thêm 1 dấu xuống dòng:
-```param5=89%0a```
+Chỗ này không biết giải thích code sao vì tới 4 cái điều kiện. Nói chung thì sẽ bypass bằng cách thêm 1 dấu xuống dòng: `param5=89%0a`
 
 > FLAG5
 ```php
@@ -1835,8 +1832,7 @@ Chỗ này không biết giải thích code sao vì tới 4 cái điều kiện.
         }
     }
 ```
-Ở đây thì dễ rồi, dùng magic hash của md4:
-```param6=gH0nAdHk```
+Ở đây thì dễ rồi, dùng magic hash của md4: `param6=gH0nAdHk`
 
 > FLAG6
 ```php
@@ -1849,8 +1845,7 @@ Chỗ này không biết giải thích code sao vì tới 4 cái điều kiện.
         }
     }
 ```
-Để lấy được flag thì sau khi bị xử lý bởi hàm preg_replace() nhằm xóa cụm từ helloworld trong param7 thì $var2 phải bằng $var1. Do đó param7 sẽ là hellohelloworldworld:
-```param7= hellohelloworldworld ```
+Để lấy được flag thì sau khi bị xử lý bởi hàm preg_replace() nhằm xóa cụm từ helloworld trong param7 thì $var2 phải bằng $var1. Do đó param7 sẽ là hellohelloworldworld: `param7= hellohelloworldworld `
 
 > FLAG7
 ```php
@@ -1864,8 +1859,7 @@ Chỗ này không biết giải thích code sao vì tới 4 cái điều kiện.
         }
     }
 ```
-param8 phải nằm trong chuỗi từ 1 đến 25 và chứa ".env". Hàm in_array() cũng tương tự như loose comparision, do đó ta có thể bypass như sau:
-```param8=18a.env```
+param8 phải nằm trong chuỗi từ 1 đến 25 và chứa ".env". Hàm in_array() cũng tương tự như loose comparision, do đó ta có thể bypass như sau: `param8=18a.env`
 
 `Flag: p_ctf{ech0_1f_7h3_7r41n_d035_n07_5t0p_1n_y0ur_5t4t10n_7h3n_1t5_n07_y0ur_7r41n}`
 
