@@ -9,12 +9,12 @@ categories: ctf
 
 | Challenge type                                             | 
 | ------------------------------------------------------------ | 
-| [WEB](#Web) | 
-| [PWNABLE](#Pwnable) | 
-| [REVERSE](#Reverse) | |
-| [CRYPTOGRAPHY](#Crypto) | 
+| [Reverse](#Web) | 
+| [Pwnable](#Pwnable) | 
+| [Reverse](#Reverse) | |
+| [Crypto](#Crypto) | 
 
-## Reverse
+## <a name="Reverse"></a>Reverse
 > ### Oak
 Bài Này cho 1 file Oak.class.Mình decomplie ra được đoạn code sau:
 
@@ -98,7 +98,7 @@ Tại hàm này thực hiện kiểm tra flag bằng vòng lặp kiểm tra từ
     }
 `Flag: p_ctf{0r1g1n4|_n@M3-0f_J4vA_Wa5_()/\|<}`
 
-## Pwnable
+## <a name="Pwnable"></a>Pwnable
 > ### TBBT
 Bạn cũng có thể tải challenge ở đây: [TBBT.zip](https://github.com/nhtri2003gmail/CTFNote/blob/master/writeup/2022/Pragyan-CTF-2022/TBBT/TBBT.zip)
 Trước tiên, ta sẽ sử dụng `file` để kiểm tra thông tin cơ bản:
@@ -1113,7 +1113,7 @@ Full script: [solve.py](https://github.com/nhtri2003gmail/CTFNote/blob/master/wr
 
 `Flag: p_ctf{mUlT1Pl3_BuFf3R_Ov3rF|0w}`
 
-## Crypto
+## <a name="Crypto"></a>Crypto
 > ### Kinda AESthetic
 
 Đề bài cung cấp file `Kinda_AESthetic.py`
@@ -1575,7 +1575,7 @@ print(long_to_bytes(pow(hide,d,p*q)).decode())
 ```
 `Flag: p_ctf{0ne_T1m3_Pads_are_1ns3cur5} `
 
-## Web
+## <a name="Web"></a>Web
 > ### Inception
 
 #### Ta copy source code về và debug xem từng biến 
