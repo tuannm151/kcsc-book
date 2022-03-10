@@ -9,12 +9,13 @@ categories: ctf
 
 | Challenge type                                             | 
 | ------------------------------------------------------------ | 
-| [WEB](#Web) | 
-| [PWNABLE](#Pwn) | 
-| [CRYPTOGRAPHY](#Crypto) | 
-| [FORENSIC](#Forensic) | 
+| [Web](#Web) | 
+| [Pwn](#Pwn) | 
+| [Crypto](#Crypto) | 
+| [Forensic](#Forensic) | 
+| [Misc](#Misc) | 
 
-## Forensic
+## <a name="Forensic"></a>Forensic
 
 > ### Blue 
 
@@ -265,7 +266,8 @@ $ cmp -bl 1 2
 
 `Flag: UMDCTF{d4r7h_pl46u315_w45_m461c}`
 
-## Web
+## <a name="Web"></a>Web
+
 > ### A Simple Calculator
 
 Source code*: https://drive.google.com/file/d/1H-VvvdStKw6ReLB2BXHYw9Zu4YLb6qIy/view?usp=sharing
@@ -447,7 +449,7 @@ Lấy được token:
 Nhưng khi gửi token này đến api/auth thì lại không được, mình thấy tác giả có hint là hình con gấu hay chó gì đó nên nghĩ đến Bearer, thêm Bearer ra đằng trước chuỗi JWT là được flag:    
 <img src="https://clbuezzz.files.wordpress.com/2022/03/image-72.png?w=957" alt="" class="wp-image-3855"/>   
 
-## Pwn
+## <a name="Pwn"></a>Pwn
 > ### The show must go on  
 
 #### Description
@@ -652,7 +654,7 @@ p.interactive()
 
 `FLAG: UMDCTF{b1ns_cAN_B3_5up3r_f4st}`
 
-## Misc
+## <a name="Misc"></a>Misc
 > ### Chungusbot v2
 
 > Check out my code!
@@ -808,7 +810,7 @@ def check2(hmm):
 `Flag: UMDCTF{Chungus_15_wh0_w3_str1v3_t0_b3c0m3}`
 
 
-## Crypto
+## <a name="Crypto"></a>Crypto
 
 > ### MTP
 
