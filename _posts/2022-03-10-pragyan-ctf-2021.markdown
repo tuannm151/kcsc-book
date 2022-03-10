@@ -1115,8 +1115,10 @@ Full script: [solve.py](https://github.com/nhtri2003gmail/CTFNote/blob/master/wr
 
 ## Crypto
 > ### Kinda AESthetic
+
 Đề bài cung cấp file `Kinda_AESthetic.py`
-```py
+
+```python
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad, unpad
 import os, sys
@@ -1202,7 +1204,7 @@ Chúng ta có thể thấy được challenge này liên quan đến `CBC Bit Fl
 Tham khảo thêm: https://ichi.pro/vi/huong-dan-hackthebox-flippin-bank-gioi-thieu-ve-cuoc-tan-cong-lat-bit-cbc-231420708308392
 
 
-```py
+```python
 from hashlib import new
 from pwn import remote, xor
 from Crypto.Util.Padding import pad, unpad
