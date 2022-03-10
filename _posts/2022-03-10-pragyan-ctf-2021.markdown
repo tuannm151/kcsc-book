@@ -1247,7 +1247,8 @@ print(r.recvline())
 ```
 
 Sau khi chạy chương trình ta thu được flag
-![image](https://user-images.githubusercontent.com/86729493/157032219-d03cfc50-f011-4aa6-9340-2d723ca226ed.png)
+![image](https://user-images.githubusercontent.com/86729493/157032219-d03cfc50-f011-4aa6-9340-2d723ca226ed.png)  
+  
 `Flag: p_ctf{4_l1ttl3_p4d4tt4ck_h3r3_&4_l1ttl3_x0r_THERE}`
 
 > ### Fragmented Heist
