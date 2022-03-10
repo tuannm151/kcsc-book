@@ -17,6 +17,7 @@ categories: ctf
 ## Forensic
 
 > ### Blue 
+
 #### Description
 Larry gave me this python script and an image. What is she trying to tell me?  
 File 1: [bluer.png](https://drive.google.com/file/d/1qOrd34ckztfl4arKI3vBUZJW54PDUCx1/view?usp=sharing)  
@@ -185,6 +186,7 @@ Và khi mở output/png chúng ta cũng tìm thấy flag
 `Flag: UMDCTF-{Sn00p1N9_L1K3_4_Sl317h!}`
 
 > ### Class Project
+
 #### Description: 
 >I was working on a project for my C programming class and I broke my VM when trying to compile my code! My project is due at 11:59. Can you please help me get my VM up and running again?<br>
 >VM Password: 1_w1ll_n07_br34k_7h15
@@ -212,6 +214,7 @@ Và khi mở output/png chúng ta cũng tìm thấy flag
 `Flag: UMDCTF{f0rk_b0mb5_4r3_4_b4d_71m3}`
 
 > ### Magic Plagueis the Wise
+
 #### Description: 
 >Did you ever hear the tragedy of Darth Plagueis The Wise? It's written here in a magical way, but I can't figure out how to read it. Can you help me?
 ><br>Download file: https://drive.google.com/file/d/1Yq5ckdzTmoUEnsyLzMJYTKLdz7JEw_ve/view?usp=sharing
@@ -264,6 +267,7 @@ $ cmp -bl 1 2
 
 ## Web
 > ### A Simple Calculator
+
 Source code*: https://drive.google.com/file/d/1H-VvvdStKw6ReLB2BXHYw9Zu4YLb6qIy/view?usp=sharing
 
 #### Review source code
@@ -395,6 +399,7 @@ print(flag_enc)
 `Flag: UMDCTF{w0w_brut3f0rc3ing_4ctu4lly_w0rks!}`
 
 > ### Customer Support
+
 Challenge có 1 nút Contact Us như sau:  
 <img src="https://clbuezzz.files.wordpress.com/2022/03/image-65.png?w=1024" alt="" class="wp-image-3839"/>   
 Khi click vào thì nó cho ta 1 form như sau:  
@@ -444,6 +449,7 @@ Nhưng khi gửi token này đến api/auth thì lại không được, mình th
 
 ## Pwn
 > ### The show must go on  
+
 #### Description
 
 Đầu tiên ta kiểm tra qua thông tin của file
