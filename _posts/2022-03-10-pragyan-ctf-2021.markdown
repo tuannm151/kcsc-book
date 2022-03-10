@@ -9,7 +9,7 @@ categories: ctf
 
 | Challenge type                                             | 
 | ------------------------------------------------------------ | 
-| [Reverse](#Web) | 
+| [Web](#Web) | 
 | [Pwnable](#Pwnable) | 
 | [Reverse](#Reverse) | |
 | [Crypto](#Crypto) | 
