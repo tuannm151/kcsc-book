@@ -59,7 +59,7 @@ permalink: /team-members/
         role: "MANAGER & CRYPTO",
         slogan: "Be positive, patient and persistent.",
         img: "https://kcsc-club.github.io/images/members/img_11.jpg",
-        link: "mailto:hhthanhuyen@gmail.com",
+        link: "https://www.facebook.com/hhthanhuyen/",
 },
 
 
@@ -141,7 +141,7 @@ permalink: /team-members/
         role: "Web exploit",
         slogan: "Go big or go home",
         img: "https://kcsc-club.github.io/images/members/Dat.jpg",
-        link: "",
+        link: "https://www.facebook.com/thanhdat1337",
 },
 
 
@@ -162,7 +162,7 @@ permalink: /team-members/
         role: "Web exploit",
         slogan: "Only with food can one achieve enlightenment",
         img: "https://kcsc-club.github.io/images/members/Trang.PNG",
-         link: "",
+         link: "https://www.facebook.com/profile.php?id=100007586445683",
 },
 
 
@@ -173,7 +173,7 @@ permalink: /team-members/
         role: "web exploit",
         slogan: "I am mad scientist.",
         img: "https://kcsc-club.github.io/images/members/Khanh.jpg",
-         link: "",
+         link: "https://twitter.com/vanirxxx_",
 },
 
 
@@ -184,7 +184,7 @@ permalink: /team-members/
         role: "Reverse",
         slogan: "quote",
         img: "https://kcsc-club.github.io/images/members/Huy.jpg",
-         link: "",
+         link: "https://twitter.com/0x7c00",
 },
 
 {
@@ -193,7 +193,7 @@ permalink: /team-members/
         role: "pwnable",
         slogan: "Pwner is pwning, a person who do magic thing 😏",
         img: "https://kcsc-club.github.io/images/members/Tri.jpg",
-         link: "",
+         link: "https://www.facebook.com/Johnathan.Huu.Tri",
 },
     
 
@@ -204,7 +204,7 @@ permalink: /team-members/
         role: "Crypto",
         slogan: "Nothing Is Impossible",
         img: "https://kcsc-club.github.io/images/members/Long.jpg",
-        link: "",
+        link: "https://www.facebook.com/NVLong.0810/",
 },
 
     //CTF TEAM >
@@ -218,7 +218,7 @@ permalink: /team-members/
         role: "LEADER MEDIA",
         slogan: "People say nothing is impossible, but I do nothing everyday :))",
         img: "https://kcsc-club.github.io/images/members/img_16.jpg",
-        link: "maito:ngochuyenlibra@gmail.com",
+        link: "mailto:ngochuyenlibra@gmail.com",
 },
 
 
@@ -228,7 +228,7 @@ permalink: /team-members/
         role: "CONTENT",
         slogan: "Don't try to be perfect, just try to be better than you were yesterday.",
         img: "https://kcsc-club.github.io/images/members/img_19.jpg",
-        link: "maito:cheese3105@gmail.com",
+        link: "mailto:cheese3105@gmail.com",
 },
 
 
@@ -259,7 +259,7 @@ permalink: /team-members/
         role: "design",
         slogan: "You can never go wrong with a little pink, and a lot of works too !",
         img: "https://kcsc-club.github.io/images/members/Van.jpeg",
-        link: "",
+        link: "https://www.facebook.com/Iamthisworldsgod/",
 },
 
 
@@ -344,7 +344,7 @@ permalink: /team-members/
         role: "Web exploit",
         slogan: "Always remember that you are absolutely unique. Just like everyone else.",
         img: "https://kcsc-club.github.io/images/members/img_12.jpg",
-        link: "mailto:ngocnhien0511@gmail.com",
+        link: "https://twitter.com/__nhienit__",
     },
 
 
@@ -372,9 +372,9 @@ permalink: /team-members/
         name: "TuilaChim",
         ban: "Former",
         role: "DESIGN",
-        slogan: "Revenge is a dish best served cold - Don Vito Corleone.",
+        slogan: "Ching chong tree nah NhienIT",
         img: "https://kcsc-club.github.io/images/members/img_14.jpg",
-        link: "mailto:khiemgamo123@gmail.com",
+        link: "http://instagram.com/l3sor.X",
 },
 
     //FORMER>
@@ -385,6 +385,14 @@ permalink: /team-members/
 
 var renderCFT = function () {
     var htmls = members.map ((member) => {
+        var socialMedia = function () {
+            if (member.link.includes ("twitter")) return "twitter"
+            else if (member.link.includes ("facebook")) return "facebook"
+            else if (member.link.includes ("outlook")) return "windows"
+            else if (member.link.includes ("gmail")) return "google"
+            else if (member.link.includes ("instagram")) return "instagram"
+        }
+
         if (member.ban === "CTF") {
             return `<!-- Team member -->
         <div class="col-xs-12 col-sm-6 col-md-4">
@@ -400,17 +408,15 @@ var renderCFT = function () {
                             </div>
                         </div>
                     </div>
-                    <div class="backside" style="
-    width: 100%;
-    ">
+                    <div class="backside">
                         <div class="card">
                             <div class="card-body text-center mt-4">
                                 <h4 class="card-title-blue"><u>${member.name} say:</u></h4>
                                 <p class="card-text">${member.slogan}</p>
                                 <ul class="list-inline">                                   
                                     <li class="list-inline-item">
-                                        <a class="social-icon text-xs-center" target="_blank" href="">
-                                            <i class="fa fa-facebook"></i>
+                                        <a class="social-icon text-xs-center" target="_blank" href="${member.link}">
+                                            <i class="fa fa-${socialMedia()}"></i>
                                         </a>
                                     </li>
                                 </ul>
@@ -429,6 +435,13 @@ var renderCFT = function () {
 
 var renderMedia = function () {
     var htmls = members.map ((member) => {
+        var socialMedia = function () {
+            if (member.link.includes ("twitter")) return "twitter"
+            else if (member.link.includes ("facebook")) return "facebook"
+            else if (member.link.includes ("outlook")) return "windows"
+            else if (member.link.includes ("gmail")) return "google"
+            else if (member.link.includes ("instagram")) return "instagram"
+        }
         if (member.ban === "media") {
             return `<!-- Team member -->
             <div class="col-xs-12 col-sm-6 col-md-4">
@@ -452,7 +465,7 @@ var renderMedia = function () {
                                     <ul class="list-inline">
                                         <li class="list-inline-item">
                                             <a class="social-icon text-xs-center" target="_blank" href="${member.link}">
-                                                <i class="fa fa-facebook"></i>
+                                                <i class="fa fa-${socialMedia()}"></i>
                                             </a>
                                         </li>
                                     </ul>
@@ -473,6 +486,13 @@ var renderMedia = function () {
 
 var renderFormer = function () {
     var htmls = members.map ((member) => {
+        var socialMedia = function () {
+            if (member.link.includes ("twitter")) return "twitter"
+            else if (member.link.includes ("facebook")) return "facebook"
+            else if (member.link.includes ("outlook")) return "windows"
+            else if (member.link.includes ("gmail")) return "google"
+            else if (member.link.includes ("instagram")) return "instagram"
+        }
         if (member.ban === "Former") {
             return `<!-- Team member -->
             <div class="col-xs-12 col-sm-6 col-md-4">
@@ -496,7 +516,7 @@ var renderFormer = function () {
                                     <ul class="list-inline">
                                         <li class="list-inline-item">
                                             <a class="social-icon text-xs-center" target="_blank" href="${member.link}">
-                                                <i class="fa fa-google"></i>
+                                                <i class="fa fa-${socialMedia()}"></i>
                                             </a>
                                         </li>
                                     </ul>
