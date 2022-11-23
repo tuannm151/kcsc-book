@@ -1,4 +1,122 @@
 ﻿var members = [
+
+//<FOMRER
+
+{
+        name: "h4niz",
+        ban: "Former",
+        role: "CO-FOUNDER & PWNABLE",
+        slogan: "Time will narrow every disparity.",
+        img: "https://kcsc-club.github.io/images/members/img_09.jpg",
+        link: "https://twitter.com/QuocAnh_NL",
+},
+
+
+
+{
+        name: "vinhjaxt",
+        ban: "Former",
+        role: "CO-FOUNDER & WEB EXPLOIT",
+        slogan: "Quá đáng, hứ 🙄🤧",
+        img: "https://kcsc-club.github.io/images/members/img_20.jpg",
+        link: "mailto:ngoc.lo.dang@gmail.com",
+},
+
+
+
+{
+        name: "tuedenn",
+        ban: "Former",
+        role: "CO-FOUNDER & REVERSE",
+        slogan: "You can change what you do, but you can’t change what you want.",
+        img: "https://kcsc-club.github.io/images/members/img_05.jpg",
+        link: "https://twitter.com/tuedenn",
+},
+
+
+
+{
+        name: "Dang Khai",
+        ban: "Former",
+        role: "CO-FOUNDER & FORENSIC",
+        slogan: "The success and results you get will be proportional to your sweat and efforts.",
+        img: "https://kcsc-club.github.io/images/members/img_01.jpg",
+        link: "https://twitter.com/h3ll38",
+},
+
+
+{
+        name: "Lu",
+        ban: "Former",
+        role: "LEADER MEDIA",
+        slogan: "Còn thở là còn sống ^-^",
+        img: "https://kcsc-club.github.io/images/members/img_13.jpg",
+        link: "mailto:trangluna81@gmail.com",
+},
+
+
+{
+        name: "Sup4Ch0k3",
+        ban: "Former",
+        role: "WEB EXPLOIT",
+        slogan: "Where failed double that place.",
+        img: "https://kcsc-club.github.io/images/members/img_10.jpg",
+        link: "mailto:trungthiennguyenn@gmail.com",
+},
+
+{
+        name: "akai",
+        ban: "Former",
+        role: "REVERSE",
+        slogan: "Luật nhân quả là khi mình cho đi điều gì thì mất luôn thứ đó :shame:.",
+        img: "https://kcsc-club.github.io/images/members/img_21.jpg",
+        link: "mailto:xcotang@gmail.com",
+},
+
+
+{
+        name: "nhienit",
+        ban: "Former",
+        role: "Web exploit",
+        slogan: "Always remember that you are absolutely unique. Just like everyone else.",
+        img: "https://kcsc-club.github.io/images/members/img_12.jpg",
+        link: "https://twitter.com/__nhienit__",
+},
+
+
+{
+        name: "Me0x2",
+        ban: "Former",
+        role: "MEDIA",
+        slogan: "Có công mài sắt có ngày mai mọi chuyện sẽ tốt hoi",
+        img: "https://kcsc-club.github.io/images/members/img_18.jpg",
+        link: "mailto:huynhlananh2505@gmail.com",
+},
+
+
+{
+        name: "XuanTrinh",
+        ban: "Former",
+        role: "CONTENT",
+        slogan: "Life is short. Smile while you still have teeth.",
+        img: "https://kcsc-club.github.io/images/members/img_17.jpg",
+        link: "mailto:trinhxuan332001@gmail.com",
+},
+
+
+{
+        name: "TuilaChim",
+        ban: "Former",
+        role: "DESIGN",
+        slogan: "Ching chong tree nah NhienIT",
+        img: "https://kcsc-club.github.io/images/members/img_14.jpg",
+        link: "http://instagram.com/l3sor.X",
+},
+
+//FORMER>         
+         
+         
+         
 //< CTF TEAM
 {
         name: "tuna99",
@@ -220,131 +338,8 @@
         link: "https://www.facebook.com/Iamthisworldsgod/",
 },
 
-{
-        name: "KaiV",
-        ban: "media",
-        role: "photo & content",
-        slogan: "It's gonna be alright !",
-        img: "https://scontent.fsgn5-15.fna.fbcdn.net/v/t1.15752-9/315001809_1087329751982414_4226509619257390946_n.jpg?_nc_cat=111&ccb=1-7&_nc_sid=ae9488&_nc_ohc=wVP9kV55cRYAX911xWh&tn=rBhZDOvrRXmeTCf6&_nc_ht=scontent.fsgn5-15.fna&oh=03_AdQPsCh57RSnzPxmUawYvVC8BZW-wawdyQla2170S67Gkw&oe=63A474C0",
-        link: "https://www.facebook.com/vi.doankhac/",
-},
-
 
 //MEDIA TEAM>
 
-//<FOMRER
-
-{
-        name: "h4niz",
-        ban: "Former",
-        role: "CO-FOUNDER & PWNABLE",
-        slogan: "Time will narrow every disparity.",
-        img: "https://kcsc-club.github.io/images/members/img_09.jpg",
-        link: "https://twitter.com/QuocAnh_NL",
-},
-
-
-
-{
-        name: "vinhjaxt",
-        ban: "Former",
-        role: "CO-FOUNDER & WEB EXPLOIT",
-        slogan: "Quá đáng, hứ 🙄🤧",
-        img: "https://kcsc-club.github.io/images/members/img_20.jpg",
-        link: "mailto:ngoc.lo.dang@gmail.com",
-},
-
-
-
-{
-        name: "tuedenn",
-        ban: "Former",
-        role: "CO-FOUNDER & REVERSE",
-        slogan: "You can change what you do, but you can’t change what you want.",
-        img: "https://kcsc-club.github.io/images/members/img_05.jpg",
-        link: "https://twitter.com/tuedenn",
-},
-
-
-
-{
-        name: "Dang Khai",
-        ban: "Former",
-        role: "CO-FOUNDER & FORENSIC",
-        slogan: "The success and results you get will be proportional to your sweat and efforts.",
-        img: "https://kcsc-club.github.io/images/members/img_01.jpg",
-        link: "https://twitter.com/h3ll38",
-},
-
-
-{
-        name: "Lu",
-        ban: "Former",
-        role: "LEADER MEDIA",
-        slogan: "Còn thở là còn sống ^-^",
-        img: "https://kcsc-club.github.io/images/members/img_13.jpg",
-        link: "mailto:trangluna81@gmail.com",
-},
-
-
-{
-        name: "Sup4Ch0k3",
-        ban: "Former",
-        role: "WEB EXPLOIT",
-        slogan: "Where failed double that place.",
-        img: "https://kcsc-club.github.io/images/members/img_10.jpg",
-        link: "mailto:trungthiennguyenn@gmail.com",
-},
-
-{
-        name: "akai",
-        ban: "Former",
-        role: "REVERSE",
-        slogan: "Luật nhân quả là khi mình cho đi điều gì thì mất luôn thứ đó :shame:.",
-        img: "https://kcsc-club.github.io/images/members/img_21.jpg",
-        link: "mailto:xcotang@gmail.com",
-},
-
-
-{
-        name: "nhienit",
-        ban: "Former",
-        role: "Web exploit",
-        slogan: "Always remember that you are absolutely unique. Just like everyone else.",
-        img: "https://kcsc-club.github.io/images/members/img_12.jpg",
-        link: "https://twitter.com/__nhienit__",
-},
-
-
-{
-        name: "Me0x2",
-        ban: "Former",
-        role: "MEDIA",
-        slogan: "Có công mài sắt có ngày mai mọi chuyện sẽ tốt hoi",
-        img: "https://kcsc-club.github.io/images/members/img_18.jpg",
-        link: "mailto:huynhlananh2505@gmail.com",
-},
-
-
-{
-        name: "XuanTrinh",
-        ban: "Former",
-        role: "CONTENT",
-        slogan: "Life is short. Smile while you still have teeth.",
-        img: "https://kcsc-club.github.io/images/members/img_17.jpg",
-        link: "mailto:trinhxuan332001@gmail.com",
-},
-
-
-{
-        name: "TuilaChim",
-        ban: "Former",
-        role: "DESIGN",
-        slogan: "Ching chong tree nah NhienIT",
-        img: "https://kcsc-club.github.io/images/members/img_14.jpg",
-        link: "http://instagram.com/l3sor.X",
-},
-
-//FORMER>
 
 ]
