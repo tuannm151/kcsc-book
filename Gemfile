@@ -1,6 +1,5 @@
 source "https://rubygems.org"
 
-gem "webrick"
 gem 'bundler'
 gem 'jekyll'
 gem 'jekyll-paginate'
@@ -10,4 +9,4 @@ gem "tzinfo-data", platforms: [:mingw, :mswin, :x64_mingw, :jruby]
 
 
 # Added at 2021-07-27 08:49:34 +0700 by sandbox:
-gem "webrick", "~> 1.7"
+gem "webrick"
