@@ -10,52 +10,51 @@ permalink: /team-members/
 <!------ Include the above in your HEAD tag ---------->
 <!-- Team -->
 <section id="team" class="pb-5">
-    <div class="container" id="former">
-        <h5 class="section-title-gray h1">@FORMER</h5>
-        <div class="row former-container">
-            
-        </div>
+
+    <div class="c-contact-menu c-contact-menu--gap-medium" id="y-select">
+</section>
 <!-- Team -->
 <section id="team" class="pb-5">
     <div class="container" id="ctfer">
         <h5 class="section-title-blue h1">@CTF</h5>
         <div class="row ctfer-container">
-            
-            
-        </div>    
+
+
+        </div>
+    </div>
+</section>
 
 <!-- Team -->
 <section id="team" class="pb-5">
     <div class="container" id="media">
         <h5 class="section-title-pink h1">@MEDIA</h5>
         <div class="row media-container">
-            
+
         </div>
+    </div>
+</section>
 
 
 <script>
-    var HTML = document.querySelector ('html');
-    var Former = document.querySelector ('#former');
-    var CTF = document.querySelector ('#ctfer');
-    var Media = document.querySelector ('#media');
-    var CTFTeam = CTF.querySelector ('.row.ctfer-container');
-    var formerTeam = Former.querySelector ('.row.former-container');
-    var mediaTeam = Media.querySelector ('.row.media-container');
+    const HTML = document.querySelector('html');
+    const Former = document.querySelector('#former');
+    const CTF = document.querySelector('#ctfer');
+    const Media = document.querySelector('#media');
+    const CTFTeam = CTF.querySelector('.row.ctfer-container');
+    const mediaTeam = Media.querySelector('.row.media-container');
+    const yearSelectContainer = document.querySelector("#y-select")
+    const years = Object.keys(data).sort().reverse();
 
+    const socialMedia = function (link) {
+        if (link.includes("twitter")) return "twitter"
+        else if (link.includes("facebook")) return "facebook"
+        else if (link.includes("outlook")) return "windows"
+        else if (link.includes("gmail")) return "google"
+        else if (link.includes("instagram")) return "instagram"
+    }
 
-
-var renderCFT = function () {
-    var htmls = members.map ((member) => {
-        var socialMedia = function () {
-            if (member.link.includes ("twitter")) return "twitter"
-            else if (member.link.includes ("facebook")) return "facebook"
-            else if (member.link.includes ("outlook")) return "windows"
-            else if (member.link.includes ("gmail")) return "google"
-            else if (member.link.includes ("instagram")) return "instagram"
-        }
-
-        if (member.ban === "CTF") {
-            return `<!-- Team member -->
+    const createMemberHtml = (member) => {
+        return `<!-- Team member -->
         <div class="col-xs-12 col-sm-6 col-md-4">
             <div class="image-flip" ontouchstart="this.classList.toggle('hover');">
                 <div class="mainflip">
@@ -77,7 +76,7 @@ var renderCFT = function () {
                                 <ul class="list-inline">                                   
                                     <li class="list-inline-item">
                                         <a class="social-icon text-xs-center" target="_blank" href="${member.link}">
-                                            <i class="fa fa-${socialMedia()}"></i>
+                                            <i class="fa fa-${socialMedia(member.link)}"></i>
                                         </a>
                                     </li>
                                 </ul>
@@ -88,164 +87,116 @@ var renderCFT = function () {
             </div>
         </div>
         <!-- ./Team member -->`
+    };
+
+    const renderMembers = function (year) {
+        if (!data[year]) {
+            console.log(data[year]);
+            return;
         }
-    })
-    CTFTeam.innerHTML = htmls.join ("");
-}
+        const members = data[year];
 
 
-var renderMedia = function () {
-    var htmls = members.map ((member) => {
-        var socialMedia = function () {
-            if (member.link.includes ("twitter")) return "twitter"
-            else if (member.link.includes ("facebook")) return "facebook"
-            else if (member.link.includes ("outlook")) return "windows"
-            else if (member.link.includes ("gmail")) return "google"
-            else if (member.link.includes ("instagram")) return "instagram"
-        }
-        if (member.ban === "media") {
-            return `<!-- Team member -->
-            <div class="col-xs-12 col-sm-6 col-md-4">
-                <div class="image-flip">
-                    <div class="mainflip flip-0">
-                        <div class="frontside">
-                            <div class="card">
-                                <div class="card-body text-center">
-                                    <p><img class=" img-fluid" src="${member.img}" alt="card image"></p>
-                                    <h4 class="card-title-pink">${member.name}</h4>
-                                    <p class="card-text">${member.role}</p> 
-                                    <a href="#" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i></a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="backside">
-                            <div class="card">
-                                <div class="card-body text-center mt-4">
-                                    <h4 class="card-title-pink"><u>${member.name} say:</u></h4>
-                                    <p class="card-text">${member.slogan}</p>
-                                    <ul class="list-inline">
-                                        <li class="list-inline-item">
-                                            <a class="social-icon text-xs-center" target="_blank" href="${member.link}">
-                                                <i class="fa fa-${socialMedia()}"></i>
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- ./Team member -->
-            `
-        }
-    })
-    mediaTeam.innerHTML = htmls.join("");
-}
+        members.forEach((member) => {
+            const memberHtml = createMemberHtml(member);
 
+            switch (member.ban) {
+                case "CTF":
+                    CTFTeam.insertAdjacentHTML('beforeend', memberHtml);
+                    break;
+                case "media":
+                    mediaTeam.insertAdjacentHTML('beforeend', memberHtml);
+                    break;
+                default:
+                    break;
+            }
+        })
+    }
 
+    const renderBtn = () => {
+        // loop through years array, create button for each year
+        // create button for each year and add event listener
+        years.forEach(year => {
+            const btn = document.createElement("a");
+            btn.classList.add("c-btn", year === years[0] ? "c-btn--primary" : 'c-btn--secondary', "c-btn--round", "c-btn--center", "c-btn--small", "c-btn--shadow");
+            btn.innerText = year;
+            btn.addEventListener("click", () => {
+                // remove active class from all buttons
+                yearSelectContainer.querySelectorAll("a").forEach(btn => {
+                    btn.classList.remove("c-btn--primary")
+                    btn.classList.add('c-btn--secondary');
+                });
 
-var renderFormer = function () {
-    var htmls = members.map ((member) => {
-        var socialMedia = function () {
-            if (member.link.includes ("twitter")) return "twitter"
-            else if (member.link.includes ("facebook")) return "facebook"
-            else if (member.link.includes ("outlook")) return "windows"
-            else if (member.link.includes ("gmail")) return "google"
-            else if (member.link.includes ("instagram")) return "instagram"
-        }
-        if (member.ban === "Former") {
-            return `<!-- Team member -->
-            <div class="col-xs-12 col-sm-6 col-md-4">
-                <div class="image-flip">
-                    <div class="mainflip flip-0">
-                        <div class="frontside">
-                            <div class="card">
-                                <div class="card-body text-center">
-                                    <p><img class=" img-fluid" src="${member.img}" alt="card image"></p>
-                                    <h4 class="card-title-gray">${member.name}</h4>
-                                    <p class="card-text">${member.role}</p> 
-                                    <a href="#" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i></a>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="backside">
-                            <div class="card">
-                                <div class="card-body text-center mt-4">
-                                    <h4 class="card-title-gray"><u>${member.name} say:</u></h4>
-                                    <p class="card-text">${member.slogan}</p>
-                                    <ul class="list-inline">
-                                        <li class="list-inline-item">
-                                            <a class="social-icon text-xs-center" target="_blank" href="${member.link}">
-                                                <i class="fa fa-${socialMedia()}"></i>
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- ./Team member -->
-            `
-        }
-    })
-    formerTeam.innerHTML = htmls.join("");
-}
-renderCFT();
-renderMedia();
-renderFormer();
+                // remove old html
+                CTFTeam.innerHTML = "";
+                mediaTeam.innerHTML = "";
+
+                // add active class to current button
+                btn.classList.add("c-btn--primary");
+                btn.classList.remove('c-btn--secondary');
+                // render team members
+                renderMembers(year);
+            });
+
+            yearSelectContainer.appendChild(btn);
+        });
+
+    }
+
+    renderBtn();
+
+    // hien thanh vien nam moi nhat
+    renderMembers(years[0]);
 </script>
 
 
 
 <style>
     .backside {
-    width: 100%!important;
-}
-.c-content {
-    padding: 0;
-}
+        width: 100% !important;
+    }
 
-#team {
-    width: 100%!important;
-}
+    .c-content {
+        padding: 0;
+    }
 
-.icon.icon--ei-chevron-up.icon--s.c-top {
-    background-color: white;
-    border-radius: 50%;
-    opacity: 0.3;
-}
+    #team {
+        width: 100% !important;
+    }
 
-.icon.icon--ei-chevron-up.icon--s.c-top:hover {
-    opacity: 1;
-    background-color: rgb(151, 142, 142);
-    color: white;
-}
+    .icon.icon--ei-chevron-up.icon--s.c-top {
+        background-color: white;
+        border-radius: 50%;
+        opacity: 0.3;
+    }
 
-.frontside .card .card-text {
-    text-transform: uppercase!important;
-}
+    .icon.icon--ei-chevron-up.icon--s.c-top:hover {
+        opacity: 1;
+        background-color: rgb(151, 142, 142);
+        color: white;
+    }
 
-.section-title-green {
-    text-align: center;
-    color: #07fc30;
-    margin-bottom: 50px;
-    text-transform: uppercase;
-}
+    .frontside .card .card-text {
+        text-transform: uppercase !important;
+    }
 
-.card-title-green {
-    color: #07fc30;
-}
+    .section-title-green {
+        text-align: center;
+        color: #07fc30;
+        margin-bottom: 50px;
+        text-transform: uppercase;
+    }
 
-u, a {
-    text-decoration: none!important;
-}
+    .card-title-green {
+        color: #07fc30;
+    }
 
-.c-author__about {
-    font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol"!important;
-}
+    u,
+    a {
+        text-decoration: none !important;
+    }
 
-
+    .c-author__about {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol" !important;
+    }
 </style>

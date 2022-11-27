@@ -35,17 +35,7 @@
       }
     }
   }
-  .c-contact-menu {
-    .c-btn {
-      min-width: 110px;
-      .icon {
-        width: 18px;
-        height: 18px;
-        vertical-align: text-bottom;
-        fill: $white-color;
-      }
-    }
-  }
+  
   .c-author__info {
     font-family: 'Volkhov', serif;
   }
@@ -71,6 +61,27 @@
     font-size: 13px;
   }
 }
+
+.c-contact-menu {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    flex-direction: row;
+    justify-content: center;
+
+    &--gap-medium {
+      gap: 10px;
+    }
+
+    .c-btn {
+      min-width: 110px;
+      .icon {
+        width: 18px;
+        height: 18px;
+        fill: $white-color;
+      }
+    }
+  }
 
 .c-sidebar-footer {
   .c-social__title {

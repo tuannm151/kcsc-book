@@ -3,12 +3,11 @@
 =============== */
 
 .c-btn {
-  display: inline-block;
-  white-space: nowrap;
-  vertical-align: middle;
+  display: flex;
+  width: fit-content;
+  align-items: center;
   font-family: 'Volkhov', serif;
   font-size: 12px;
-  text-align: center;
   padding: 8px 15px;
   cursor: pointer;
   transition: $global-transition;
@@ -36,10 +35,18 @@
     }
   }
 
+  &--center{
+    justify-content: center;
+  }
+
   &--middle {
     display: block;
     width: 300px;
     max-width: 100%;
+  }
+
+  &--small {
+    min-width: 80px !important;
   }
 
   &--big {
